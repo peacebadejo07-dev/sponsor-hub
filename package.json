@@ -27,6 +27,7 @@
     "daily": "npm run daily -w jobs --",
     "sectors": "npm run sectors -w jobs --",
     "chbulk": "npm run chbulk -w resolver --",
+    "copy-data": "tsx scripts/copy-data.ts",
     "deploy": "npm run build -w web && cd web && wrangler deploy"
   },
   "devDependencies": {

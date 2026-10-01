@@ -23,7 +23,12 @@ Everything runs on free tiers: **Supabase** (Postgres), **Cloudflare Workers** (
    npm run db:migrate
    npm run import                         # downloads and imports the Home Office register (about 10 seconds)
    ```
-3. Fill it gradually (the first daily run also downloads Companies House's monthly bulk file, about 470 MB, and gives most organisations a company number and SIC codes): the daily scan researches new organisations, finds job boards and scans them. To start faster, run it by hand
+3. **Start with what is already found.** On the machine where you ran the research, copy the profiles, live roles and scan log across
+   (it replaces those tables and refuses to run if the target already has user accounts):
+   ```bash
+   TO_URL='postgres://...pooler...' npm run copy-data
+   ```
+4. Or fill it gradually (the first daily run also downloads Companies House's monthly bulk file, about 470 MB, and gives most organisations a company number and SIC codes): the daily scan researches new organisations, finds job boards and scans them. To start faster, run it by hand
    a few times: `npm run daily -- --force`.
 
 Size: the register takes about 85 MB. Job descriptions are not stored (only a short excerpt), and closed roles are deleted after 60 days.
