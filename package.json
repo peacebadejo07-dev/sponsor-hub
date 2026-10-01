@@ -9,6 +9,7 @@
     "importer",
     "resolver",
     "scanner",
+    "jobs",
     "web"
   ],
   "scripts": {
@@ -21,7 +22,10 @@
     "scan": "npm run start -w scanner --",
     "typecheck": "tsc -p .",
     "probe": "npm run probe -w resolver --",
-    "discover": "npm run discover -w scanner --"
+    "discover": "npm run discover -w scanner --",
+    "reverify": "npm run reverify -w resolver --",
+    "daily": "npm run daily -w jobs --",
+    "deploy": "npm run build -w web && cd web && wrangler deploy"
   },
   "devDependencies": {
     "@types/node": "^26.6.3",

@@ -44,6 +44,17 @@ describe.skipIf(!up)('scan lifecycle (needs the dev database)', () => {
     await sql.end();
   });
 
+  it('a board that lists the same posting twice does not crash the scan and stores it once', async () => {
+    const dup = ok(job('dup'), job('dup', { title: 'Software Engineer dup (updated)' }), job('other'));
+    expect(dup.kept).toHaveLength(3);
+    const stats = await saveScan(sql, ORG, dup);
+    expect(stats.added).toBe(2); // 'dup' and 'other'
+    const rows = await sql`select title from opportunities where name_key = ${KEY} and external_id = 'dup'`;
+    expect(rows).toHaveLength(1);
+    expect(rows[0].title).toMatch(/updated/); // the last listing wins
+    await sql`delete from opportunities where name_key = ${KEY}`;
+  });
+
   it('adds new jobs, then reports no change on an identical rescan', async () => {
     expect(await saveScan(sql, ORG, ok(job('a'), job('b')))).toEqual({ added: 2, changed: 0, expired: 0 });
     expect(await saveScan(sql, ORG, ok(job('a'), job('b')))).toEqual({ added: 0, changed: 0, expired: 0 });

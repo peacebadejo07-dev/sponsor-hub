@@ -45,7 +45,9 @@ export async function saveScan(sql: Sql, org: { nameKey: string; source: Source;
       where name_key = ${org.nameKey} and status = 'expired' group by 1, 2`;
     const priorMap = new Map(prior.map((p) => [`${p.t}\u0000${p.l}`, p.n]));
 
-    const rows = out.kept.map((o) => {
+    // A board can list the same posting twice; one insert statement cannot touch the same row twice, so keep the last of each.
+    const unique = [...new Map(out.kept.map((o) => [o.external_id, o])).values()];
+    const rows = unique.map((o) => {
       const isNew = !known.has(o.external_id);
       const repost = isNew ? (priorMap.has(`${o.title.toLowerCase()}\u0000${o.location_raw.toLowerCase()}`) ? priorMap.get(`${o.title.toLowerCase()}\u0000${o.location_raw.toLowerCase()}`)! + 1 : 0) : 0;
       if (isNew) stats.added++;
@@ -77,19 +79,19 @@ export async function saveScan(sql: Sql, org: { nameKey: string; source: Source;
           last_seen_at = now(), missed_scans = 0, status = 'live', expired_at = null`;
     }
 
-    const seen = out.kept.map((o) => o.external_id);
+    const seen = unique.map((o) => o.external_id);
     const gone = await tx`
       update opportunities set
         missed_scans = missed_scans + 1,
         status = case when missed_scans + 1 >= ${EXPIRE_AFTER_MISSES} then 'expired' else status end,
         expired_at = case when missed_scans + 1 >= ${EXPIRE_AFTER_MISSES} then now() else expired_at end
       where name_key = ${org.nameKey} and source = ${org.source} and status = 'live'
-        and external_id <> all(${tx.array(seen.length ? seen : ['__none__'])}::text[])
+        and external_id <> all(${tx.array(seen.length ? seen : ['__none__'], 1009)}::text[])
       returning (status = 'expired') as expired`;
     stats.expired = gone.filter((g) => g.expired).length;
 
     await tx`update org_scans set finished_at = now(), ok = true, http_status = 200, jobs_found = ${out.found},
-             jobs_kept = ${out.kept.length}, added = ${stats.added}, changed = ${stats.changed}, expired = ${stats.expired} where id = ${scan.id}`;
+             jobs_kept = ${unique.length}, added = ${stats.added}, changed = ${stats.changed}, expired = ${stats.expired} where id = ${scan.id}`;
     return stats;
   });
 }

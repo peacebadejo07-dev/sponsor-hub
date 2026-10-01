@@ -60,8 +60,8 @@ export async function getProfile(sql: Sql, userId: string): Promise<{ profile: U
 export async function saveProfile(sql: Sql, userId: string, p: UserProfile): Promise<void> {
   await sql`
     insert into user_profiles (user_id, roles, locations, work_modes, employment_types, level, skills, years_experience, needs_sponsorship, min_salary, hide_refusals, updated_at)
-    values (${userId}, ${sql.array(p.roles)}, ${sql.array(p.locations)}, ${sql.array(p.workModes)}, ${sql.array(p.employmentTypes)}, ${p.level},
-            ${sql.array(p.skills)}, ${p.yearsExperience}, ${p.needsSponsorship}, ${p.minSalary}, ${p.hideRefusals}, now())
+    values (${userId}, ${sql.array(p.roles, 1009)}, ${sql.array(p.locations, 1009)}, ${sql.array(p.workModes, 1009)}, ${sql.array(p.employmentTypes, 1009)}, ${p.level},
+            ${sql.array(p.skills, 1009)}, ${p.yearsExperience}, ${p.needsSponsorship}, ${p.minSalary}, ${p.hideRefusals}, now())
     on conflict (user_id) do update set roles = excluded.roles, locations = excluded.locations, work_modes = excluded.work_modes,
       employment_types = excluded.employment_types, level = excluded.level, skills = excluded.skills,
       years_experience = excluded.years_experience, needs_sponsorship = excluded.needs_sponsorship,

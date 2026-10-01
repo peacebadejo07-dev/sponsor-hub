@@ -22,6 +22,13 @@ export function authConfig(origin: string): AuthConfig {
   return { secret: secret ?? 'dev-only-secret-not-for-production', baseUrl, mailer };
 }
 
+/** The key for unsubscribe links. Same value the daily job uses (AUTH_SECRET); required in production. */
+export function authSecret(): string {
+  const secret = env.AUTH_SECRET;
+  if (!dev && (!secret || secret.length < 32)) throw new Error('AUTH_SECRET (32+ characters) must be set in production');
+  return secret ?? 'dev-only-secret-not-for-production';
+}
+
 export const sessionCookieOptions = (expires: Date) => ({
   path: '/',
   httpOnly: true,

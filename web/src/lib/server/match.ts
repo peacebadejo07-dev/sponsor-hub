@@ -1,74 +1,16 @@
-import { scoreMatch, type MatchableJob, type MatchResult, type UserProfile } from '@sponsored/core';
+import type { UserProfile } from '@sponsored/core';
+import { FOR_YOU_PAGE, rankForUser as rank, ranked, type RankedRow, type RankOptions } from '@sponsored/accounts';
 import { sql } from './db';
 
-export const FOR_YOU_PAGE = 20;
-const CANDIDATE_CAP = 400;
+export type { RankedRow };
 
-export interface RankedRow {
-  id: number;
-  org_id: number;
-  org_name: string;
-  title: string;
-  role_family: string;
-  seniority: string | null;
-  city: string | null;
-  location_raw: string;
-  work_mode: string | null;
-  employment_type: string | null;
-  salary_min: number | null;
-  salary_max: number | null;
-  salary_currency: string | null;
-  salary_period: string | null;
-  skills: string[];
-  years_experience: number | null;
-  apply_url: string;
-  sponsorship_signal: string;
-  sponsorship_snippet: string | null;
-  posted_at: string | null;
-  first_seen_at: string;
-  last_seen_at: string;
-  changed_at: string | null;
-  stale_reason: string | null;
-  status: string;
-  provenance: Record<string, { status: string }>;
-}
+export { FOR_YOU_PAGE };
 
-const COLS = sql`id, org_id, org_name, title, role_family, seniority, city, location_raw, work_mode, employment_type, salary_min, salary_max,
-  salary_currency, salary_period, skills, years_experience, apply_url, sponsorship_signal, sponsorship_snippet, posted_at, first_seen_at, last_seen_at,
-  changed_at, stale_reason, status, provenance`;
-
-/**
- * Rank live opportunities for one person. SQL narrows to a few hundred recent candidates (the database does the heavy work,
- * which matters on free hosting with tiny CPU limits); scoring and the explanations happen here, on those rows only.
- */
-export async function rankForUser(userId: string, profile: UserProfile, page: number) {
-  const candidates = await sql<RankedRow[]>`
-    select ${COLS} from opportunities_view
-    where status = 'live'
-      and id not in (select opportunity_id from opportunity_marks where user_id = ${userId} and mark = 'dismissed')
-      ${profile.roles.length ? sql`and role_family = any(${sql.array(profile.roles)}::text[])` : sql``}
-    order by coalesce(posted_at, first_seen_at) desc, id desc
-    limit ${CANDIDATE_CAP}`;
-  const scored: { row: RankedRow; match: MatchResult }[] = [];
-  let hiddenCount = 0;
-  for (const row of candidates) {
-    const match = scoreMatch(profile, row as unknown as MatchableJob);
-    if (match.hidden) hiddenCount++;
-    else scored.push({ row, match });
-  }
-  scored.sort((a, b) => b.match.score - a.match.score || +new Date(b.row.first_seen_at) - +new Date(a.row.first_seen_at));
-  const start = (page - 1) * FOR_YOU_PAGE;
-  return {
-    items: scored.slice(start, start + FOR_YOU_PAGE),
-    total: scored.length,
-    hiddenCount,
-    capped: candidates.length >= CANDIDATE_CAP
-  };
-}
+export const rankForUser = (userId: string, profile: UserProfile, page: number, opts?: RankOptions) => rank(sql, userId, profile, page, opts);
 
 export async function savedForUser(userId: string) {
   const rows = await sql<(RankedRow & { mark: string })[]>`
-    select ${COLS}, m.mark from opportunity_marks m
+    select ${ranked(sql)}, m.mark from opportunity_marks m
     join opportunities_view v on v.id = m.opportunity_id
     where m.user_id = ${userId} order by m.created_at desc`;
   const orgs = await sql<{ id: number; name: string; town: string; county: string; website: string | null; careers_url: string | null; live: number }[]>`

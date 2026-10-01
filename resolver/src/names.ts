@@ -5,6 +5,16 @@ const LEGAL = new Set([
   'cic', 'cio', 'uk', 'gb', 'europe', 'emea', 'holdings', 'group', 'international', 'intl', 'the', 'and'
 ]);
 
+/**
+ * Foreign legal forms and branch-location words. They are only dropped from the END of a name, and only when at least
+ * two other words remain, because elsewhere they can be the name itself ("Software AG", "Kingdom Technologies",
+ * "Pacific Green Technologies").
+ */
+const TRAILING = new Set([
+  'gmbh', 'ag', 'bv', 'nv', 'sa', 'sas', 'sarl', 'srl', 'spa', 'pty', 'pvt', 'private', 'oy', 'ab', 'kk', 'ltda', 'kg', 'ug', 'sl', 'sro',
+  'united', 'kingdom', 'britain', 'canada', 'usa', 'america', 'americas', 'ireland', 'scotland', 'wales', 'england', 'apac', 'asia', 'pacific'
+]);
+
 /** Words too common to identify a company on their own. */
 const GENERIC = new Set([
   'global', 'digital', 'smart', 'first', 'alpha', 'delta', 'prime', 'apex', 'blue', 'green', 'red', 'london', 'british',
@@ -43,10 +53,14 @@ export function coreName(name: string): CoreName {
   const words = normaliseText(tradingName(name).replace(/\(.*?\)/g, ' ')).split(' ').filter(Boolean);
   let tokens = words.filter((w) => !LEGAL.has(w));
   if (tokens.length === 0) tokens = words;
+  while (tokens.length >= 3 && TRAILING.has(tokens[tokens.length - 1])) tokens = tokens.slice(0, -1);
   return { tokens, phrase: tokens.join(' '), brand: tokens[0] ?? '' };
 }
 
 /** Words that appear in countless company names and say nothing about what the company does. */
+/** Everyday English words that appear on any page, so they prove nothing about who owns it. */
+const STOP = new Set(['it', 'of', 'at', 'in', 'on', 'by', 'to', 'as', 'be', 'is', 'or', 'an', 'if', 'my', 'we', 'us', 'no', 'so', 'do', 'go', 'up', 'me', 'he', 'am', 'the', 'and', 'for']);
+
 const FILLER = new Set(['solutions', 'services', 'systems', 'consulting', 'consultancy', 'consultants', 'limited', 'company', 'trading', 'enterprises', 'associates', 'partners']);
 
 export const isGeneric = (w: string) => GENERIC.has(w) || w.length < 4;
@@ -139,11 +153,16 @@ export function verifyHomepage(html: string, finalUrl: string, org: { name: stri
 
   // Brand-only matches must be corroborated: another word from the name has to appear on the page,
   // otherwise "Bluecube Cyber Security" would match an unrelated "Bluecube" AI company.
-  const others = core.tokens.slice(1).filter((t) => t.length >= 3 && !FILLER.has(t));
+  // Short tokens count too: "AI" is what tells Clarity AI apart from an air-quality company called Clarity.
+  const others = core.tokens.slice(1).filter((t) => t.length >= 2 && !FILLER.has(t) && !STOP.has(t));
+  // The rest of the name must show up on the page. Generic words do not count as evidence when the name has a
+  // distinctive one: "Elastic Path Software" is not confirmed by a page that merely says "software".
+  const distinctive = others.filter((t) => !isGeneric(t));
+  const pool = distinctive.length ? distinctive : others;
   const brandOnly = c > 0 && c < 0.75 && !phraseInHead && !phraseInFoot && !allTokensInHead && !joinedLabel;
-  if (brandOnly && others.length > 0 && !others.some((t) => ` ${all} `.includes(` ${t} `))) {
+  if (brandOnly && pool.length > 0 && !pool.some((t) => ` ${all} `.includes(` ${t} `))) {
     c = Math.min(c, 0.5);
-    reasons.push('no other word from the name appears on the page');
+    reasons.push('no distinctive word from the name appears on the page');
   }
 
   if (c > 0 && core.tokens.length === 1 && isGeneric(core.brand)) { c = Math.min(c, 0.55); reasons.push('generic single-word name'); }

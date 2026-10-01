@@ -1,4 +1,4 @@
-import postgres from 'postgres';
+import { connect, deadlineFrom } from '@sponsored/db';
 import { ADAPTERS, isSupported } from './adapters/index.ts';
 import { screen, normalise, type OppRow } from './normalise.ts';
 import { saveScan } from './db.ts';
@@ -18,7 +18,8 @@ const force = flag('force');
 const dryRun = flag('dry-run');
 const ENRICH_CAP = 80;
 
-const sql = postgres(process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:54329/sponsored', { max: 4, onnotice: () => {} });
+const sql = connect(4);
+const deadline = deadlineFrom(Number(opt('budget-minutes', '0')));
 
 interface Target { name_key: string; ats_type: string; ats_slug: string }
 
@@ -35,7 +36,7 @@ const targets = await sql<Target[]>`
   limit ${limit}`;
 
 console.log(`Scanning ${targets.length} job boards${dryRun ? ' (dry run)' : ''}`);
-const totals = { boards: 0, failed: 0, found: 0, kept: 0, added: 0, changed: 0, expired: 0, notUk: 0, notTech: 0 };
+const totals = { boards: 0, deferred: 0, failed: 0, found: 0, kept: 0, added: 0, changed: 0, expired: 0, notUk: 0, notTech: 0 };
 
 async function scanOne(t: Target) {
   if (!isSupported(t.ats_type)) return;
@@ -46,6 +47,13 @@ async function scanOne(t: Target) {
     // The adapter found the precise board address (e.g. Workday host number); remember it.
     await sql`update org_profiles set ats_slug = ${res.slug} where name_key = ${t.name_key}`;
     t.ats_slug = res.slug;
+  }
+  if (!res.ok && res.status === 429) {
+    // The host asked us to slow down or stay away. That is not the board's fault, so it is not recorded as a failure
+    // (which would back it off for 3 days); it is simply tried again on the next run.
+    totals.deferred++;
+    console.log(`  [deferred] ${t.name_key} ${t.ats_type}:${t.ats_slug} (host is rate limiting us)`);
+    return;
   }
   if (!res.ok) {
     totals.failed++;
@@ -90,7 +98,7 @@ async function scanOne(t: Target) {
 
 let next = 0;
 async function worker() {
-  while (next < targets.length) {
+  while (next < targets.length && Date.now() < deadline) {
     const t = targets[next++];
     try {
       await scanOne(t);
@@ -102,4 +110,5 @@ async function worker() {
 }
 await Promise.all(Array.from({ length: Math.max(1, concurrency) }, worker));
 console.log('\nDone', totals);
+console.log('SUMMARY ' + JSON.stringify({ step: 'scan', ...totals, queued: targets.length, stoppedEarly: next < targets.length }));
 await sql.end();

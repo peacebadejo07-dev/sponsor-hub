@@ -1,9 +1,8 @@
 import { fileURLToPath } from 'node:url';
-import postgres from 'postgres';
+import { connect } from '@sponsored/db';
 import { readdirSync, readFileSync } from 'node:fs';
 
-const url = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:54329/sponsored';
-const sql = postgres(url, { max: 1, onnotice: () => {} });
+const sql = connect(1);
 const dir = fileURLToPath(new URL('../db/migrations/', import.meta.url));
 
 await sql`create table if not exists schema_migrations (name text primary key, applied_at timestamptz not null default now())`;

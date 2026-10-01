@@ -3,9 +3,9 @@
 One dashboard for finding UK organisations licensed to sponsor workers, and (in later milestones) the live
 tech roles they advertise. Open source (MIT), built to run on free tiers. See [PLAN.md](PLAN.md).
 
-**Status: M4, accounts and matching.** Register importer, organisation browser, a resolver that finds each
+**Status: M5, the daily scan.** Register importer, organisation browser, a resolver that finds each
 organisation's website, careers page and job-board system, and a scanner that reads those job boards for UK tech
-roles. Accounts (passwordless email sign-in), a profile, ranked "For you" roles with plain-English reasons, and saved roles and organisations are built. The daily schedule and deployment come in M5-M6.
+roles. Accounts (passwordless email sign-in), a profile, ranked "For you" roles with plain-English reasons, and saved roles and organisations are built. A daily orchestrator runs the whole pipeline at 08:00 UK time, a **Today** page shows what changed, **Status** shows how the scan is doing, and people can opt in to a weekly email digest. See [DEPLOY.md](DEPLOY.md) to put it online.
 
 ## Data labels
 
@@ -66,6 +66,18 @@ Verified accordingly.
 
 `npm run import -- --file path/to/register.csv` imports a local copy (the date is read from the file name, or
 pass `--published YYYY-MM-DD`). Re-importing a newer register records what was added, removed or changed.
+
+## The daily run
+
+```bash
+npm run daily -- --gate               # what the scheduler runs: only does anything in the UK morning window, once per UK day
+npm run daily -- --force              # run now
+npm run daily -- --force --only scan  # just some steps (register, research, probe, discover, scan, maintenance, digest)
+```
+
+Steps run in order, each with a time budget, and one failing step never stops the rest. Every run is recorded (`scan_runs`) and
+shown on **Status**. Closed roles are kept for 60 days (longer if someone saved them), then removed. Hosts that ask the scanner to
+stay away (HTTP 429 with a long Retry-After) are left alone until then.
 
 ## Accounts and matching
 

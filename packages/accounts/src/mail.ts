@@ -2,6 +2,8 @@ export interface Mail {
   to: string;
   subject: string;
   text: string;
+  /** Extra headers, e.g. List-Unsubscribe. */
+  headers?: Record<string, string>;
 }
 
 export interface Mailer {
@@ -22,7 +24,7 @@ export function resendMailer(apiKey: string, from: string, fetchImpl: typeof fet
       const res = await fetchImpl('https://api.resend.com/emails', {
         method: 'POST',
         headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
-        body: JSON.stringify({ from, to: [m.to], subject: m.subject, text: m.text }),
+        body: JSON.stringify({ from, to: [m.to], subject: m.subject, text: m.text, ...(m.headers ? { headers: m.headers } : {}) }),
         signal: AbortSignal.timeout(10_000)
       });
       if (!res.ok) throw new Error(`Resend responded ${res.status}`);

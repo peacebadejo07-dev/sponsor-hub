@@ -26,10 +26,10 @@ function where(f: OppFilters, skip?: Skip) {
     c.push(sql`(lower(title) like ${like} or lower(org_name) like ${like})`);
   }
   if (f.city) c.push(sql`(city ilike ${escapeLike(f.city) + '%'} or location_raw ilike ${'%' + escapeLike(f.city) + '%'})`);
-  if (skip !== 'family' && f.families.length) c.push(sql`role_family = any(${sql.array(f.families)}::text[])`);
-  if (skip !== 'employment' && f.employment.length) c.push(sql`employment_type = any(${sql.array(f.employment)}::text[])`);
-  if (skip !== 'sponsorship' && f.sponsorship.length) c.push(sql`sponsorship_signal = any(${sql.array(f.sponsorship)}::text[])`);
-  if (skip !== 'seniority' && f.seniority.length) c.push(sql`seniority = any(${sql.array(f.seniority)}::text[])`);
+  if (skip !== 'family' && f.families.length) c.push(sql`role_family = any(${sql.array(f.families, 1009)}::text[])`);
+  if (skip !== 'employment' && f.employment.length) c.push(sql`employment_type = any(${sql.array(f.employment, 1009)}::text[])`);
+  if (skip !== 'sponsorship' && f.sponsorship.length) c.push(sql`sponsorship_signal = any(${sql.array(f.sponsorship, 1009)}::text[])`);
+  if (skip !== 'seniority' && f.seniority.length) c.push(sql`seniority = any(${sql.array(f.seniority, 1009)}::text[])`);
   if (skip !== 'mode' && f.modes.length) {
     // "Remote or office" jobs satisfy both a remote and a hybrid/onsite search.
     const want = new Set<string>();
@@ -37,7 +37,7 @@ function where(f: OppFilters, skip?: Skip) {
       want.add(m);
       if (m === 'remote' || m === 'hybrid' || m === 'onsite') want.add('flexible');
     }
-    c.push(sql`work_mode = any(${sql.array([...want])}::text[])`);
+    c.push(sql`work_mode = any(${sql.array([...want], 1009)}::text[])`);
   }
   if (f.since > 0) c.push(sql`(first_seen_at > now() - make_interval(days => ${f.since}) or changed_at > now() - make_interval(days => ${f.since}))`);
   if (f.hasSalary) c.push(sql`salary_min is not null`);

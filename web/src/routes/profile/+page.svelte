@@ -65,6 +65,11 @@
     <label class="check"><input type="checkbox" name="hideRefusals" checked={p.hideRefusals} /> Hide roles whose posting says they don't sponsor visas (only if you need sponsorship)</label>
   </fieldset>
 
+  <fieldset>
+    <legend>Email <span class="opt">(optional)</span></legend>
+    <label class="check"><input type="checkbox" name="digest" checked={data.digest} /> Email me a weekly list of new roles that fit my profile (off unless you tick this; one click to stop)</label>
+  </fieldset>
+
   <button type="submit" class="primary">Save profile</button>
 </form>
 

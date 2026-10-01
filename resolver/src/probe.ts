@@ -12,7 +12,14 @@ export interface ProbeHit {
 export interface ProbeOrg {
   name: string;
   website?: string | null;
+  /** How sure we are that `website` is really this organisation's. A weak guess must not vouch for a board. */
+  websiteConfidence?: number | null;
 }
+
+/** Below this, the website is not trusted as corroboration (brand-only matches such as elastic.io for "Elastic Path"). */
+export const TRUSTED_WEBSITE = 0.8;
+
+const websiteTrusted = (org: ProbeOrg) => !!org.website && (org.websiteConfidence ?? 0) >= TRUSTED_WEBSITE;
 
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{2,40}$/;
 
@@ -47,7 +54,7 @@ export function boardNameMatches(boardName: string | undefined | null, org: Prob
   const prefix = o.phrase.startsWith(b.phrase + ' ') || b.phrase.startsWith(o.phrase + ' ');
   if (!same && !prefix) return false;
   const shared = b.tokens.length <= o.tokens.length ? b : o;
-  const websiteAgrees = domainLabelIs(org.website, shared.phrase.replace(/ /g, '')) || domainLabelIs(org.website, shared.tokens.join('-'));
+  const websiteAgrees = domainLabelIs(org.website, shared.phrase.replace(/ /g, ''), org) || domainLabelIs(org.website, shared.tokens.join('-'), org);
   // A name made only of generic words ("AI Tech", "Smart", "Delta") names many unrelated companies.
   if (shared.tokens.every((t) => isGeneric(t))) return websiteAgrees;
   if (same) return true;
@@ -56,8 +63,8 @@ export function boardNameMatches(boardName: string | undefined | null, org: Prob
   return websiteAgrees;
 }
 
-function domainLabelIs(website: string | null | undefined, label: string): boolean {
-  if (!website) return false;
+function domainLabelIs(website: string | null | undefined, label: string, org?: ProbeOrg): boolean {
+  if (!website || (org && !websiteTrusted(org))) return false;
   try {
     return new URL(website).hostname.replace(/^www\./, '').split('.')[0] === label;
   } catch {
@@ -72,7 +79,7 @@ export function textMentionsOrg(texts: string[], org: ProbeOrg): boolean {
   const joined = ` ${normaliseText(texts.join(' ').slice(0, 30_000))} `;
   if (joined.includes(` ${o.phrase} `)) return true;
   // Brand alone is accepted only when it is a distinctive word and the domain agrees.
-  return o.brand.length >= 5 && !isGeneric(o.brand) && joined.includes(` ${o.brand} `) && domainLabelIs(org.website, o.brand);
+  return o.brand.length >= 5 && !isGeneric(o.brand) && joined.includes(` ${o.brand} `) && domainLabelIs(org.website, o.brand, org);
 }
 
 async function probeOne(ats: ProbeAts, slug: string, org: ProbeOrg): Promise<ProbeHit | null> {

@@ -1,0 +1,74 @@
+name: Daily scan
+
+# Runs the daily scan at 08:00 UK time, all year.
+#
+# GitHub's scheduler uses UTC and knows nothing about British Summer Time, so the job fires at BOTH 07:07 and 08:07 UTC
+# (not on the hour: GitHub is busiest at :00 and delays or drops jobs then).
+# The job itself (`npm run daily -- --gate`) does nothing unless it is the UK morning window (08:00-13:59 UK time) and
+# today's run has not already completed, so exactly one of the two firings does the work.
+#
+# Scheduled runs are best effort: GitHub can start them late at busy times, and pauses scheduled workflows in a
+# repository with no activity for 60 days (push a commit, or run this workflow manually, to wake it).
+on:
+  schedule:
+    - cron: '7 7 * * *'
+    - cron: '7 8 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Run now, ignoring the UK-morning window and the once-a-day rule'
+        type: boolean
+        default: false
+      only:
+        description: 'Only these steps, comma separated (register, research, probe, discover, scan, maintenance, digest)'
+        type: string
+        default: ''
+
+# Never two scans at once; a run that is still going finishes before the next starts.
+concurrency:
+  group: daily-scan
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      # No secrets while dependencies install: install scripts of third-party packages run here.
+      - run: npm ci
+      - name: Apply database migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_CA: ${{ secrets.DATABASE_CA }}
+        run: npm run db:migrate
+      - name: Daily scan
+        env:
+          NODE_ENV: production
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_CA: ${{ secrets.DATABASE_CA }}
+          COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          AUTH_FROM: ${{ secrets.AUTH_FROM }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          PUBLIC_BASE_URL: ${{ vars.PUBLIC_BASE_URL }}
+          BOT_CONTACT: ${{ vars.BOT_CONTACT }}
+          # Inputs go through the environment, never straight into the shell command, so they cannot inject commands.
+          FORCE: ${{ inputs.force }}
+          ONLY: ${{ inputs.only }}
+        run: |
+          set -eu
+          args="--gate"
+          if [ "${FORCE:-false}" = "true" ]; then args="--force"; fi
+          if [ -n "${ONLY:-}" ]; then
+            case "$ONLY" in *[!a-z,]*) echo "Invalid 'only' value"; exit 2;; esac
+            args="$args --only $ONLY"
+          fi
+          npm run daily -- $args

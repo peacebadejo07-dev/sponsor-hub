@@ -20,9 +20,9 @@ function where(f: OrgFilters, skip?: Skip) {
   const conds = [sql`status = 'active'`];
   if (f.q) conds.push(sql`name_key ilike ${'%' + escapeLike(f.q.toLowerCase()) + '%'}`);
   if (f.town) conds.push(sql`town_key like ${escapeLike(f.town.toLowerCase()) + '%'}`);
-  if (skip !== 'sector' && f.sectors.length) conds.push(sql`all_sector_tags && ${sql.array(f.sectors)}::text[]`);
-  if (skip !== 'route' && f.routes.length) conds.push(sql`routes && ${sql.array(f.routes)}::text[]`);
-  if (skip !== 'rating' && f.ratings.length) conds.push(sql`rating = any(${sql.array(f.ratings)}::text[])`);
+  if (skip !== 'sector' && f.sectors.length) conds.push(sql`all_sector_tags && ${sql.array(f.sectors, 1009)}::text[]`);
+  if (skip !== 'route' && f.routes.length) conds.push(sql`routes && ${sql.array(f.routes, 1009)}::text[]`);
+  if (skip !== 'rating' && f.ratings.length) conds.push(sql`rating = any(${sql.array(f.ratings, 1009)}::text[])`);
   if (f.hasCareers) conds.push(sql`careers_url is not null`);
   return conds.reduce((a, c) => sql`${a} and ${c}`);
 }

@@ -36,6 +36,8 @@ describe('email handling (no database needed)', () => {
     const calls: any[] = [];
     const ok = resendMailer('key123', 'Hub <hi@hub.test>', (async (u: string, init: any) => (calls.push([u, init]), new Response('{}', { status: 200 }))) as any);
     await ok.send({ to: 'a@b.test', subject: 'S', text: 'T' });
+    await ok.send({ to: 'a@b.test', subject: 'S', text: 'T', headers: { 'List-Unsubscribe': '<https://x.test/u>' } });
+    expect(JSON.parse(calls[1][1].body).headers).toEqual({ 'List-Unsubscribe': '<https://x.test/u>' });
     expect(calls[0][0]).toBe('https://api.resend.com/emails');
     expect(calls[0][1].headers.authorization).toBe('Bearer key123');
     expect(JSON.parse(calls[0][1].body)).toEqual({ from: 'Hub <hi@hub.test>', to: ['a@b.test'], subject: 'S', text: 'T' });
@@ -110,10 +112,7 @@ describe('profile input is cleaned, not trusted (no database needed)', () => {
 
 describe.skipIf(!up)('sign-in, sessions and data (needs the dev database)', () => {
   beforeAll(cleanup);
-  afterAll(async () => {
-    await cleanup();
-    await sql.end();
-  });
+  afterAll(cleanup);
   beforeEach(() => {
     sent = [];
   });
@@ -316,4 +315,126 @@ describe.skipIf(!up)('sign-in, sessions and data (needs the dev database)', () =
     expect((await getProfile(sql, bob)).exists === false && (await sql`select count(*)::int as n from users where id = ${bob}`)[0].n === 1).toBe(true); // bob is untouched
     expect(await deleteAccount(sql, alice)).toBe(false);
   });
+});
+
+import { unsubscribeToken, verifyUnsubscribeToken, setDigest, buildDigest, sendDigests, rankForUser } from '../src/index.ts';
+
+describe('unsubscribe tokens (no database needed)', () => {
+  const id = '3f2b8c1e-5d4a-4f6b-9a7c-1e2d3c4b5a69';
+  it('round-trips, and cannot be forged or reused for another user', () => {
+    const t = unsubscribeToken(id, 'secret-a');
+    expect(verifyUnsubscribeToken(t, 'secret-a')).toBe(id);
+    expect(verifyUnsubscribeToken(t, 'secret-b')).toBeNull(); // different key
+    const other = '9c1e2d3c-4b5a-4f69-8a7b-0e1d2c3b4a58';
+    expect(verifyUnsubscribeToken(`${other}.${t.split('.')[1]}`, 'secret-a')).toBeNull(); // another user's id with this MAC
+    for (const bad of ['', 'x', `${id}.`, `${id}.AAAA`, `not-a-uuid.${t.split('.')[1]}`, `${t}x`, '..']) expect(verifyUnsubscribeToken(bad, 'secret-a'), bad).toBeNull();
+  });
+});
+
+describe.skipIf(!up)('weekly digest (needs the dev database)', () => {
+  beforeAll(cleanup);
+  afterAll(cleanup);
+  beforeEach(() => { sent = []; });
+  const cfgD = (over = {}) => ({ mailer: { send: async (m: Mail) => void sent.push(m) }, secret: 'digest-secret', baseUrl: 'https://hub.test', ...over });
+  const mkUser = async (n: string, opts: { optIn?: boolean; profile?: Record<string, unknown> | null; lastDigest?: string | null } = {}) => {
+    await requestLogin(sql, cfg(), mail(n), '5.5.5.9');
+    const v = await verifyLogin(sql, {}, tokenFrom(sent[sent.length - 1]));
+    if (!v.ok) throw new Error('sign-in failed');
+    if (opts.optIn) await setDigest(sql, v.userId, true);
+    if (opts.profile !== null) await saveProfile(sql, v.userId, sanitiseProfile(opts.profile ?? { roles: ['software', 'data', 'ai_ml', 'product', 'design', 'cloud_devops', 'cybersecurity', 'adjacent', 'it_support'], skills: ['python'], level: 'senior' }));
+    if (opts.lastDigest !== undefined) await sql`update users set last_digest_at = ${opts.lastDigest === null ? null : sql`now() - ${opts.lastDigest}::interval`} where id = ${v.userId}`;
+    sent = [];
+    return v.userId;
+  };
+
+  it('only emails people who opted in, with a working unsubscribe link, and records the send', async () => {
+    const yes = await mkUser('dg-yes', { optIn: true });
+    const no = await mkUser('dg-no', { optIn: false });
+    const [live] = await sql`select count(*)::int as n from opportunities where status = 'live'`;
+    // Freshly found roles are what the digest is for; make sure some exist for this test.
+    await sql`update opportunities set first_seen_at = now() - interval '1 day' where id in (select id from opportunities where status = 'live' limit 8)`;
+    const r = await sendDigests(sql, cfgD());
+    expect(r.failed).toBe(0);
+    const mine = sent.filter((m) => m.to === mail('dg-yes'));
+    if (live.n > 0) {
+      expect(mine).toHaveLength(1);
+      expect(mine[0].text).toMatch(/% match\)/);
+      expect(mine[0].text).toMatch(/Apply: https?:\/\//);
+      const listing = mine[0].text.split('Every employer')[0]; // everything before the disclaimer
+      expect(listing).not.toMatch(/is sponsored|will sponsor|guaranteed/i); // the listing never claims a role is sponsored
+      expect(mine[0].text).toMatch(/does not mean a particular role is sponsored/); // and the disclaimer is there
+      const link = mine[0].text.match(/unsubscribe\?token=(\S+)/)![1];
+      expect(verifyUnsubscribeToken(decodeURIComponent(link), 'digest-secret')).toBe(yes);
+      // Machine-readable one-click unsubscribe, as Gmail and Yahoo require from bulk senders.
+      expect(mine[0].headers?.['List-Unsubscribe']).toMatch(/^<https:\/\/hub\.test\/unsubscribe\/one-click\?token=/);
+      expect(mine[0].headers?.['List-Unsubscribe-Post']).toBe('List-Unsubscribe=One-Click');
+      expect((await sql`select last_digest_at from users where id = ${yes}`)[0].last_digest_at).not.toBeNull();
+    }
+    expect(sent.some((m) => m.to === mail('dg-no'))).toBe(false);
+    expect((await sql`select last_digest_at from users where id = ${no}`)[0].last_digest_at).toBeNull();
+  });
+
+  it('sends at most one a week, and not at all to someone with no preferences', async () => {
+    await mkUser('dg-recent', { optIn: true, lastDigest: '2 days' });
+    await mkUser('dg-empty', { optIn: true, profile: null });
+    await sql`update opportunities set first_seen_at = now() - interval '1 day' where id in (select id from opportunities where status = 'live' limit 8)`;
+    await sendDigests(sql, cfgD());
+    expect(sent.some((m) => m.to === mail('dg-recent'))).toBe(false); // sent 2 days ago
+    expect(sent.some((m) => m.to === mail('dg-empty'))).toBe(false); // nothing to rank by
+  });
+
+  it('does not mark someone as sent when there was nothing to send, so the next run tries again', async () => {
+    const uid = await mkUser('dg-nothing', { optIn: true, profile: { roles: ['product'], locations: ['Nowhereville'], skills: ['cobol'], level: 'executive' } });
+    await sql`update opportunities set first_seen_at = now() - interval '30 days'`; // nothing new in the last week
+    const r = await sendDigests(sql, cfgD());
+    expect(sent.some((m) => m.to === mail('dg-nothing'))).toBe(false);
+    expect(r.nothingToSend).toBeGreaterThan(0);
+    expect((await sql`select last_digest_at from users where id = ${uid}`)[0].last_digest_at).toBeNull();
+  });
+
+  it('a failing mailer is counted, not thrown, does not mark the user as sent, and does not log their address', async () => {
+    await mkUser('dg-fail', { optIn: true });
+    await sql`update opportunities set first_seen_at = now() - interval '1 day' where id in (select id from opportunities where status = 'live' limit 8)`;
+    const logs: string[] = [];
+    const r = await sendDigests(sql, cfgD({ mailer: { send: async () => { throw new Error('mail provider 500'); } }, log: (m: string) => logs.push(m) }));
+    expect(logs.join(' ')).not.toContain(mail('dg-fail'));
+    const [u] = await sql`select last_digest_at from users where email = ${mail('dg-fail')}`;
+    expect(u.last_digest_at).toBeNull();
+    expect(r.sent).toBe(0);
+  });
+
+  it('ranks for a one-role profile (a single-element array parameter)', async () => {
+    const uid = await mkUser('dg-onerole', { optIn: false, profile: { roles: ['data'], skills: ['sql'] } });
+    const { profile } = await getProfile(sql, uid);
+    expect(profile.roles).toEqual(['data']);
+    const r = await rankForUser(sql, uid, profile, 1);
+    expect(r.items.every((i) => i.row.role_family === 'data')).toBe(true);
+  });
+
+  it('two overlapping runs cannot email the same person twice', async () => {
+    await mkUser('dg-race', { optIn: true });
+    await sql`update opportunities set first_seen_at = now() - interval '1 day' where id in (select id from opportunities where status = 'live' limit 8)`;
+    await Promise.all([sendDigests(sql, cfgD()), sendDigests(sql, cfgD())]);
+    expect(sent.filter((m) => m.to === mail('dg-race')).length).toBeLessThanOrEqual(1);
+  });
+
+  it('only includes roles found since the previous digest', async () => {
+    const uid = await mkUser('dg-since', { optIn: true, lastDigest: '6 days 1 hour' });
+    await sql`update opportunities set first_seen_at = now() - interval '7 days' where status = 'live'`; // all older than the last digest
+    await sendDigests(sql, cfgD());
+    expect(sent.some((m) => m.to === mail('dg-since'))).toBe(false); // nothing new since then: no repeat
+    void uid;
+  });
+
+  it('respects the per-run cap', async () => {
+    for (const n of ['cap1', 'cap2', 'cap3']) await mkUser(`dg-${n}`, { optIn: true });
+    const r = await sendDigests(sql, cfgD({ maxPerRun: 2 }));
+    expect(r.due).toBeLessThanOrEqual(2);
+  });
+});
+
+// One shared connection for the whole file, closed once everything has run.
+afterAll(async () => {
+  await cleanup().catch(() => {});
+  await sql.end();
 });

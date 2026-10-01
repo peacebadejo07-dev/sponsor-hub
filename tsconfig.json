@@ -9,5 +9,5 @@
     "allowImportingTsExtensions": true,
     "types": ["node"]
   },
-  "include": ["packages/*/src", "packages/*/test", "importer/src", "importer/test", "resolver/src", "resolver/test", "scanner/src", "scanner/test", "scripts"]
+  "include": ["packages/*/src", "packages/*/test", "importer/src", "importer/test", "resolver/src", "resolver/test", "scanner/src", "scanner/test", "jobs/src", "jobs/test", "scripts"]
 }

@@ -17,6 +17,26 @@ describe('coreName', () => {
   });
 });
 
+describe('coreName: foreign legal forms and branch locations are not part of the name', () => {
+  it.each([
+    ['Renesas Electronics Europe GmbH', 'renesas electronics'],
+    ['Covasant Technologies (UK) Private Limited', 'covasant technologies'],
+    ['Christie Digital Systems Canada Inc.', 'christie digital systems'],
+    ['Motherson Technology Services United Kingdom Limited', 'motherson technology services'],
+    ['Acme B.V.', 'acme b v'],
+    ['Foo Pty Ltd', 'foo pty'],
+    // where the "suffix" word IS the name, it stays
+    ['Software AG (UK) Limited', 'software ag'],
+    ['AG Technologies LTD', 'ag technologies'],
+    ['Kingdom Technologies Ltd', 'kingdom technologies'],
+    ['Kingdom Advance Network', 'kingdom advance network'],
+    ['Pacific Green Technologies (UK) Limited', 'pacific green technologies'],
+    ['Quantum Pacific (UK) LLP', 'quantum pacific']
+  ])('%s', (name, phrase) => {
+    expect(coreName(name).phrase).toBe(phrase);
+  });
+});
+
 describe('domainCandidates', () => {
   it('puts the full joined name before the brand alone', () => {
     const c = domainCandidates('Acme Software Ltd');
@@ -79,6 +99,32 @@ describe('brand-only corroboration', () => {
   });
   it('accepts when another word from the name appears on the page', () => {
     const v = verifyHomepage(page('Worldline | Payments', LONG + ' Our IT services power payments.'), 'https://worldline.com/', { name: 'Worldline IT Services UK Limited' });
+    expect(v.confidence).toBeGreaterThanOrEqual(0.6);
+  });
+});
+
+describe('short distinguishing words are not ignored (the Clarity AI / clarity.io failure)', () => {
+  it('rejects an air-quality company for "Clarity AI"', () => {
+    const v = verifyHomepage(page('Clarity: Low-Cost Air Quality Monitoring & Measurement Solutions', LONG + ' Air quality sensors for cities.'), 'https://www.clarity.io/', { name: 'Clarity AI Ltd', town: 'London' });
+    expect(v.confidence).toBeLessThan(0.6);
+  });
+  it('accepts the right site, which does mention AI', () => {
+    const v = verifyHomepage(page('Clarity | Sustainability technology', LONG + ' Our AI platform measures impact.'), 'https://clarity.ai/', { name: 'Clarity AI Ltd', town: 'London' });
+    expect(v.confidence).toBeGreaterThanOrEqual(0.6);
+  });
+  it('everyday words like "it" prove nothing, so they are not required', () => {
+    const v = verifyHomepage(page('Worldline | Payments', LONG + ' Payment services.'), 'https://worldline.com/', { name: 'Worldline IT Services UK Limited' });
+    expect(v.confidence).toBeGreaterThanOrEqual(0.6);
+  });
+});
+
+describe('generic words do not corroborate a distinctive name', () => {
+  it('rejects elastic.io for "Elastic Path Software" even though the page says "software"', () => {
+    const v = verifyHomepage(page('Elastic | The Search AI Company', LONG + ' Build search software.'), 'https://elastic.io/', { name: 'Elastic Path Software (UK) Ltd' });
+    expect(v.confidence).toBeLessThan(0.6);
+  });
+  it('still accepts the right site, where the distinctive word is present', () => {
+    const v = verifyHomepage(page('Elastic Path | Composable commerce', LONG), 'https://elasticpath.com/', { name: 'Elastic Path Software (UK) Ltd' });
     expect(v.confidence).toBeGreaterThanOrEqual(0.6);
   });
 });
@@ -199,21 +245,21 @@ describe('board probing: slug candidates', () => {
 
 describe('board probing: does a board belong to the organisation?', () => {
   it('matches the company name on the board', () => {
-    expect(boardNameMatches('Monzo', { name: 'Monzo Bank Ltd', website: 'https://monzo.com' })).toBe(true);
+    expect(boardNameMatches('Monzo', { name: 'Monzo Bank Ltd', website: 'https://monzo.com', websiteConfidence: 0.9 })).toBe(true);
     expect(boardNameMatches('Monzo', { name: 'Monzo Bank Ltd' })).toBe(false); // prefix match, nothing corroborates it
-    expect(boardNameMatches('Wise', { name: 'Wise Payments Limited', website: 'https://wise.com' })).toBe(true);
+    expect(boardNameMatches('Wise', { name: 'Wise Payments Limited', website: 'https://wise.com', websiteConfidence: 0.9 })).toBe(true);
     expect(boardNameMatches('Acme Software', { name: 'Acme Software Limited' })).toBe(true);
   });
   it('needs corroboration when the board name is only the start of the organisation name', () => {
     // "Abacus" is shared by many unrelated companies.
     expect(boardNameMatches('ABACUS', { name: 'Abacus Information Technology UK Limited' })).toBe(false);
-    expect(boardNameMatches('ABACUS', { name: 'Abacus Information Technology UK Limited', website: 'https://www.abacusit.co.uk' })).toBe(false);
-    expect(boardNameMatches('ABACUS', { name: 'Abacus Information Technology UK Limited', website: 'https://abacus.com' })).toBe(true);
+    expect(boardNameMatches('ABACUS', { name: 'Abacus Information Technology UK Limited', website: 'https://www.abacusit.co.uk', websiteConfidence: 0.9 })).toBe(false);
+    expect(boardNameMatches('ABACUS', { name: 'Abacus Information Technology UK Limited', website: 'https://abacus.com', websiteConfidence: 0.9 })).toBe(true);
     // Even a long word is not enough on its own: "Atlantis" and "Blueprint" are ordinary words.
     expect(boardNameMatches('Atlantis', { name: 'Atlantis Technology Solutions Limited' })).toBe(false);
     expect(boardNameMatches('Blueprint', { name: 'Blueprint Technologies Limited' })).toBe(false);
-    expect(boardNameMatches('Darktrace', { name: 'Darktrace Holdings Limited', website: 'https://www.darktrace.com' })).toBe(true);
-    expect(boardNameMatches('accesso', { name: 'accesso Technology Group', website: 'https://accesso.com' })).toBe(true);
+    expect(boardNameMatches('Darktrace', { name: 'Darktrace Holdings Limited', website: 'https://www.darktrace.com', websiteConfidence: 0.9 })).toBe(true);
+    expect(boardNameMatches('accesso', { name: 'accesso Technology Group', website: 'https://accesso.com', websiteConfidence: 0.9 })).toBe(true);
   });
   it('rejects different companies, including look-alikes', () => {
     expect(boardNameMatches('Monzo Foods', { name: 'Monzo Bank Ltd' })).toBe(false); // same first word, different company
@@ -223,12 +269,27 @@ describe('board probing: does a board belong to the organisation?', () => {
   });
   it('does not accept a name made only of generic words without a matching website', () => {
     expect(boardNameMatches('AI TECH', { name: 'AI Tech Ltd' })).toBe(false);
-    expect(boardNameMatches('AI TECH', { name: 'AI Tech Ltd', website: 'https://aitech.co.uk' })).toBe(true);
+    expect(boardNameMatches('AI TECH', { name: 'AI Tech Ltd', website: 'https://aitech.co.uk', websiteConfidence: 0.9 })).toBe(true);
   });
   it('does not accept a bare generic word without a matching website', () => {
     expect(boardNameMatches('Delta', { name: 'Delta Limited' })).toBe(false);
-    expect(boardNameMatches('Delta', { name: 'Delta Limited', website: 'https://delta.co.uk' })).toBe(true);
-    expect(boardNameMatches('Delta', { name: 'Delta Limited', website: 'https://deltaairlines.com' })).toBe(false);
+    expect(boardNameMatches('Delta', { name: 'Delta Limited', website: 'https://delta.co.uk', websiteConfidence: 0.9 })).toBe(true);
+    expect(boardNameMatches('Delta', { name: 'Delta Limited', website: 'https://deltaairlines.com', websiteConfidence: 0.9 })).toBe(false);
+  });
+});
+
+describe('a weak website cannot vouch for a board (the Elastic Path / elastic.io failure)', () => {
+  it('rejects a board that shares only the first word when the website match was a weak guess', () => {
+    const weak = { name: 'Elastic Path Software (UK) Ltd', website: 'https://elastic.io', websiteConfidence: 0.65 };
+    expect(boardNameMatches('Elastic', weak)).toBe(false);
+    expect(boardNameMatches('Elastic', { ...weak, websiteConfidence: undefined })).toBe(false);
+    expect(textMentionsOrg(['Join Genesis today'], { name: 'Genesis Technology Services Limited', website: 'https://genesis.com', websiteConfidence: 0.7 })).toBe(false);
+  });
+  it('still accepts when the website itself is well verified', () => {
+    expect(boardNameMatches('Neo4j', { name: 'Neo4j Technology Limited', website: 'https://neo4j.com', websiteConfidence: 0.85 })).toBe(true);
+  });
+  it('an exact board-name match does not need the website at all', () => {
+    expect(boardNameMatches('Monzo', { name: 'Monzo' })).toBe(true);
   });
 });
 
@@ -241,7 +302,7 @@ describe('board probing: job text must name the organisation (Lever / Ashby)', (
   });
   it('accepts a distinctive brand only when the domain agrees', () => {
     const t = ['Join Worldline today'];
-    expect(textMentionsOrg(t, { name: 'Worldline IT Services UK Limited', website: 'https://worldline.com' })).toBe(true);
+    expect(textMentionsOrg(t, { name: 'Worldline IT Services UK Limited', website: 'https://worldline.com', websiteConfidence: 0.9 })).toBe(true);
     expect(textMentionsOrg(t, { name: 'Worldline IT Services UK Limited' })).toBe(false);
   });
 });

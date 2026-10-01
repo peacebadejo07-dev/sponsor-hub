@@ -1,4 +1,4 @@
-import postgres from 'postgres';
+import { connect, deadlineFrom } from '@sponsored/db';
 import { resolveOrg, type ProfileResult } from './resolve.ts';
 import { sizeBand } from './wikidata.ts';
 
@@ -17,7 +17,8 @@ const retry = flag('retry');
 const dryRun = flag('dry-run');
 const chKey = process.env.COMPANIES_HOUSE_API_KEY;
 
-const sql = postgres(process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:54329/sponsored', { max: 4, onnotice: () => {} });
+const sql = connect(4);
+const deadline = deadlineFrom(Number(opt('budget-minutes', '0')));
 
 interface Target { name_key: string; name: string; town: string; county: string; branches: number }
 
@@ -45,8 +46,8 @@ async function save(t: Target, r: ProfileResult | null, error?: string) {
     values (${t.name_key}, ${p ? p.status : 'error'}, ${p?.website ?? null}, ${p?.websiteConfidence ?? null}, ${p?.websiteSource ?? null},
       ${p?.websiteCandidate ?? null}, ${p?.careersUrl ?? null}, ${p?.ats?.ats ?? null}, ${p?.ats?.slug ?? null},
       ${p?.wikidata?.id ?? null}, ${p?.company?.number ?? null}, ${p?.company?.status ?? null}, ${p?.company?.incorporatedOn ?? null},
-      ${sql.array(p?.company?.sic ?? [])}, ${p ? sizeBand(p.wikidata?.employees ?? null) : null}, ${sql.array(p?.wikidata?.industry ?? [])},
-      ${sql.array(p?.sectorTags ?? [])}, ${p?.siteTitle ?? null}, ${p?.siteDescription ?? null},
+      ${sql.array(p?.company?.sic ?? [], 1009)}, ${p ? sizeBand(p.wikidata?.employees ?? null) : null}, ${sql.array(p?.wikidata?.industry ?? [], 1009)},
+      ${sql.array(p?.sectorTags ?? [], 1009)}, ${p?.siteTitle ?? null}, ${p?.siteDescription ?? null},
       ${sql.json((p?.provenance ?? {}) as any)}, 1, ${error ?? null}, ${p?.status === 'resolved' ? sql`now()` : null})
     on conflict (name_key) do update set
       resolve_status = excluded.resolve_status, website = excluded.website, website_confidence = excluded.website_confidence,
@@ -68,7 +69,7 @@ let done = 0;
 let next = 0;
 
 async function worker() {
-  while (next < targets.length) {
+  while (next < targets.length && Date.now() < deadline) {
     const t = targets[next++];
     try {
       const r = await resolveOrg({ name: t.name, town: t.town, county: t.county }, { companiesHouseKey: chKey });
@@ -93,4 +94,5 @@ async function worker() {
 const started = Date.now();
 await Promise.all(Array.from({ length: Math.max(1, concurrency) }, worker));
 console.log(`\nDone in ${Math.round((Date.now() - started) / 1000)}s`, stats, atsCounts);
+console.log('SUMMARY ' + JSON.stringify({ step: 'research', attempted: done, ...stats, stoppedEarly: next < targets.length }));
 await sql.end();

@@ -1,4 +1,4 @@
-import postgres from 'postgres';
+import { connect, deadlineFrom } from '@sponsored/db';
 import { jsonld } from './adapters/jsonld.ts';
 
 /** Find careers pages that publish schema.org JobPosting data, and mark them scannable (ats_type = 'jsonld'). */
@@ -12,7 +12,8 @@ const concurrency = Number(opt('concurrency', '4'));
 const nameLike = opt('name');
 const dryRun = args.includes('--dry-run');
 
-const sql = postgres(process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:54329/sponsored', { max: 4, onnotice: () => {} });
+const sql = connect(4);
+const deadline = deadlineFrom(Number(opt('budget-minutes', '0')));
 
 interface Target { name_key: string; careers_url: string }
 const targets = await sql<Target[]>`
@@ -27,7 +28,7 @@ console.log(`Checking ${targets.length} careers pages for structured job data${d
 let found = 0;
 let next = 0;
 async function worker() {
-  while (next < targets.length) {
+  while (next < targets.length && Date.now() < deadline) {
     const t = targets[next++];
     try {
       const r = await jsonld.fetchBoard(t.careers_url);
@@ -49,4 +50,5 @@ async function worker() {
 }
 await Promise.all(Array.from({ length: Math.max(1, concurrency) }, worker));
 console.log(`\nDone: ${found}/${targets.length} careers pages publish structured job data`);
+console.log('SUMMARY ' + JSON.stringify({ step: 'discover', attempted: Math.min(next, targets.length), found, stoppedEarly: next < targets.length }));
 await sql.end();

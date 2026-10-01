@@ -1,14 +1,19 @@
 import type { Handle } from '@sveltejs/kit';
 import { getSession } from '@sponsored/accounts';
-import { sql } from '$lib/server/db';
+import { sql, withRequestDb } from '$lib/server/db';
 import { SESSION_COOKIE } from '$lib/server/auth';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-export const handle: Handle = async ({ event, resolve }) => {
+export const handle: Handle = ({ event, resolve }) => withRequestDb(() => handleRequest(event, resolve), event.platform?.context?.waitUntil?.bind(event.platform.context));
+
+const handleRequest = async (event: Parameters<Handle>[0]['event'], resolve: Parameters<Handle>[0]['resolve']) => {
   // CSRF: every state-changing request must come from this site. Browsers always send an Origin header on such requests.
   // SvelteKit does this too, but only in production builds; checking here makes it identical (and testable) everywhere.
-  if (!SAFE_METHODS.has(event.request.method) && event.request.headers.get('origin') !== event.url.origin) {
+  // The one exception: the mail-provider one-click unsubscribe (RFC 8058), which has no browser and so no Origin, and is
+  // authenticated by its token.
+  const oneClick = event.url.pathname === '/unsubscribe/one-click' && event.request.method === 'POST';
+  if (!SAFE_METHODS.has(event.request.method) && !oneClick && event.request.headers.get('origin') !== event.url.origin) {
     return new Response('Cross-site requests are forbidden', { status: 403 });
   }
 
@@ -25,7 +30,10 @@ export const handle: Handle = async ({ event, resolve }) => {
     if (!event.locals.user) event.cookies.delete(SESSION_COOKIE, { path: '/' }); // looked up fine; there is no such session
   }
 
-  const res = await resolve(event);
+  const resolved = await resolve(event);
+  // On Cloudflare Workers the framework's response headers can be immutable, and a plain set() then silently does
+  // nothing. Rebuilding the response gives mutable headers, so what we set below always takes effect.
+  const res = new Response(resolved.body, resolved);
 
   // A signed-in response may contain that person's saves and profile, so it must never be stored by a shared cache.
   if (token) res.headers.set('cache-control', 'private, no-store');

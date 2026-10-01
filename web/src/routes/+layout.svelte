@@ -21,7 +21,7 @@
       <a href="/opportunities" aria-current={here.startsWith('/opportunities') ? 'page' : undefined}>Opportunities</a>
       <a href="/for-you" aria-current={here.startsWith('/for-you') ? 'page' : undefined}>For you</a>
       <a href="/saved" aria-current={here.startsWith('/saved') ? 'page' : undefined}>Saved</a>
-      <span class="soon" title="Coming in a later milestone">Today</span>
+      <a href="/today" aria-current={here.startsWith('/today') ? 'page' : undefined}>Today</a>
     </nav>
     <div class="acct">
       {#if data.user}
@@ -39,7 +39,7 @@
 <footer class="wrap foot">
   Organisation data: Home Office register of licensed sponsors, published on GOV.UK under the
   <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>.
-  Being on the register does not mean any particular role is sponsored. <a href="/privacy">Privacy</a>
+  Being on the register does not mean any particular role is sponsored. <a href="/status">Scan status</a> · <a href="/privacy">Privacy</a>
 </footer>
 
 <style>
@@ -54,14 +54,12 @@
   .brand { white-space: nowrap; font-weight: 700; font-size: 18px; text-decoration: none; letter-spacing: -0.01em; }
   .brand span { color: var(--accent); }
   nav { display: flex; gap: 4px; overflow-x: auto; }
-  nav a, nav .soon { padding: 6px 12px; border-radius: 8px; text-decoration: none; white-space: nowrap; font-size: 14px; }
+  nav a { padding: 6px 12px; border-radius: 8px; text-decoration: none; white-space: nowrap; font-size: 14px; }
   nav a[aria-current='page'] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-  nav .soon { color: var(--muted); opacity: 0.6; cursor: not-allowed; }
   @media (max-width: 560px) {
     .bar { height: auto; padding-top: 8px; padding-bottom: 8px; flex-wrap: wrap; gap: 4px 16px; }
     nav { width: 100%; }
-    nav .soon { display: none; }
-    .me { display: none; }
+      .me { display: none; }
   }
   main { padding-top: 24px; padding-bottom: 40px; min-height: 70vh; }
   .foot { color: var(--muted); font-size: 13px; padding-bottom: 32px; }
