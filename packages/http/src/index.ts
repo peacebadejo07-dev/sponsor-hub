@@ -160,3 +160,21 @@ export async function fetchPage(url: string, opts: FetchOpts = {}, extraHeaders:
   }
   return null;
 }
+
+export interface JsonResult<T> {
+  ok: boolean;
+  status: number; // 0 = network/DNS/robots failure
+  data: T | null;
+}
+
+/** GET a documented public JSON API. Distinguishes "not found" (404) from "could not reach" (status 0). */
+export async function fetchJson<T = unknown>(url: string, opts: FetchOpts = {}): Promise<JsonResult<T>> {
+  const page = await fetchPage(url, { skipRobots: true, accept: 'application/json', maxBytes: 25_000_000, timeoutMs: 30_000, ...opts });
+  if (!page) return { ok: false, status: 0, data: null };
+  if (page.status !== 200) return { ok: false, status: page.status, data: null };
+  try {
+    return { ok: true, status: 200, data: JSON.parse(page.text) as T };
+  } catch {
+    return { ok: false, status: 200, data: null }; // truncated or not JSON
+  }
+}

@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 import { classifyName, type SectorTag } from '@sponsored/core';
-import { fetchPage, hostResolves } from './http.ts';
+import { fetchPage, hostResolves } from '@sponsored/http';
 import { domainCandidates, verifyHomepage, coreName, labelOf, BOT_CHALLENGE, type Verdict } from './names.ts';
 import { detectAts, extractCareersLinks, COMMON_CAREER_PATHS, type AtsHit } from './ats.ts';
 import { wikidataLookup, sizeBand, type WikidataInfo } from './wikidata.ts';

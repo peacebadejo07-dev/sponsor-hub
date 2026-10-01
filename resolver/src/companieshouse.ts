@@ -1,4 +1,4 @@
-import { fetchPage } from './http.ts';
+import { fetchPage } from '@sponsored/http';
 import { coreName, normaliseText } from './names.ts';
 import type { SectorTag } from '@sponsored/core';
 

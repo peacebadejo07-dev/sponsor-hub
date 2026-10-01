@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node"]
+  },
+  "include": ["packages/*/src", "packages/*/test", "importer/src", "importer/test", "resolver/src", "resolver/test", "scanner/src", "scanner/test", "scripts"]
+}

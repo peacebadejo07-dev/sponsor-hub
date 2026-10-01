@@ -11,6 +11,6 @@
     "@sponsored/core": "*",
     "cheerio": "^1.0.0",
     "postgres": "^3.4.5",
-    "robots-parser": "^3.0.1"
+    "@sponsored/http": "*"
   }
 }

@@ -3,7 +3,7 @@ import { coreName, domainCandidates, verifyHomepage } from '../src/names.ts';
 import { detectAts, extractCareersLinks } from '../src/ats.ts';
 import { pickEntity, pickWebsite, sizeBand } from '../src/wikidata.ts';
 import { pickCompany, sicToTags } from '../src/companieshouse.ts';
-import { isPrivateIp } from '../src/http.ts';
+import { isPrivateIp } from '@sponsored/http';
 import { sectorsFromText } from '../src/resolve.ts';
 
 describe('coreName', () => {

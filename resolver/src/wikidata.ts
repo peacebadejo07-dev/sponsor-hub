@@ -1,4 +1,4 @@
-import { fetchPage } from './http.ts';
+import { fetchPage } from '@sponsored/http';
 import { coreName, normaliseText } from './names.ts';
 
 const API = 'https://www.wikidata.org/w/api.php';

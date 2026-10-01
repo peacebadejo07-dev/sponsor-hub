@@ -1,7 +1,13 @@
 <script lang="ts">
   import { RATING_LABELS, RATING_HELP } from '$lib/labels';
   import { SECTOR_TAGS } from '@sponsored/core';
+  import { onMount } from 'svelte';
   let { data } = $props();
+  // Open on desktop; on phones start collapsed unless filters are already active, so results are visible.
+  let filtersOpen = $state(true);
+  onMount(() => {
+    if (window.innerWidth < 820 && activeCount === 0) filtersOpen = false;
+  });
 
   const f = $derived(data.filters);
   const activeCount = $derived(f.sectors.length + f.routes.length + f.ratings.length + (f.hasCareers ? 1 : 0) + (f.town ? 1 : 0) + (f.q ? 1 : 0));
@@ -40,7 +46,7 @@
 </div>
 
 <div class="layout">
-  <details class="filters" open={activeCount > 0 || undefined}>
+  <details class="filters" bind:open={filtersOpen}>
     <summary>Filters{#if activeCount}{' '}({activeCount}){/if}</summary>
     <form method="GET" action="/">
       <label class="field">

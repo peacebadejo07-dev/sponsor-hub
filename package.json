@@ -8,6 +8,7 @@
     "packages/*",
     "importer",
     "resolver",
+    "scanner",
     "web"
   ],
   "scripts": {
@@ -16,7 +17,9 @@
     "import": "npm run start -w importer --",
     "resolve": "npm run start -w resolver --",
     "test": "vitest run",
-    "dev": "npm run dev -w web"
+    "dev": "npm run dev -w web",
+    "scan": "npm run start -w scanner --",
+    "typecheck": "tsc -p ."
   },
   "devDependencies": {
     "@types/node": "^26.6.3",

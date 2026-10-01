@@ -1,6 +1,8 @@
 <script lang="ts">
   import './layout.css';
+  import { page } from '$app/state';
   let { children } = $props();
+  const here = $derived(page.url.pathname);
 </script>
 
 <svelte:head>
@@ -15,8 +17,8 @@
   <div class="wrap bar">
     <a class="brand" href="/">Sponsor Hub<span>.</span></a>
     <nav aria-label="Sections">
-      <a href="/" aria-current="page">Organisations</a>
-      <span class="soon" title="Coming in a later milestone">Opportunities</span>
+      <a href="/" aria-current={here === '/' || here.startsWith('/org/') ? 'page' : undefined}>Organisations</a>
+      <a href="/opportunities" aria-current={here.startsWith('/opportunities') ? 'page' : undefined}>Opportunities</a>
       <span class="soon" title="Coming in a later milestone">Saved</span>
       <span class="soon" title="Coming in a later milestone">Today</span>
     </nav>
