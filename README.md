@@ -3,7 +3,7 @@
 One dashboard for finding UK organisations licensed to sponsor workers, and (in later milestones) the live
 tech roles they advertise. Open source (MIT), built to run on free tiers. See [PLAN.md](PLAN.md).
 
-**Status: M5, the daily scan.** Register importer, organisation browser, a resolver that finds each
+**Status: M6, launch hardening.** Register importer, organisation browser, a resolver that finds each
 organisation's website, careers page and job-board system, and a scanner that reads those job boards for UK tech
 roles. Accounts (passwordless email sign-in), a profile, ranked "For you" roles with plain-English reasons, and saved roles and organisations are built. A daily orchestrator runs the whole pipeline at 08:00 UK time, a **Today** page shows what changed, **Status** shows how the scan is doing, and people can opt in to a weekly email digest. See [DEPLOY.md](DEPLOY.md) to put it online.
 
@@ -12,7 +12,7 @@ roles. Accounts (passwordless email sign-in), a profile, ranked "For you" roles 
 Every field is labelled by how we know it:
 
 - **Verified**: read directly from the Home Office register (name, town, route, rating).
-- **Inferred**: worked out by us (e.g. sector guessed from the organisation name). Can be wrong.
+- **Inferred**: worked out by us (e.g. sector read from the website, or as a last resort guessed from the name). Each sector tag shows its evidence. Can be wrong.
 - **Unconfirmed**: could not be found.
 
 Being on the register does **not** mean any particular role is sponsored.
@@ -49,7 +49,7 @@ npm run scan -- --limit 50                    # scan boards not checked in the l
 npm run scan -- --org monzo --force --dry-run
 ```
 
-The scanner reads the public job-board APIs of **Greenhouse, Lever, Ashby, Workable, SmartRecruiters and Workday**. It keeps
+The scanner reads the public job-board APIs of **Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Workday, Teamtailor, BambooHR, Recruitee and Personio** (plus careers pages that publish schema.org job data). To add another, see [docs/ADAPTERS.md](docs/ADAPTERS.md). It keeps
 only UK jobs in tech and adjacent roles, extracts role family, level, work mode, employment type, salary, skills and
 the posting's own sponsorship wording (quoted, never inferred from the register), and tracks each job's life: a job
 missing from two successful scans is marked expired, and a failed fetch never expires anything. Only a short excerpt
@@ -63,6 +63,11 @@ guess only when the board's own company name, or its job text, names the organis
 not enough). `discover` reads schema.org `JobPosting` data that careers pages publish for Google for Jobs, which
 covers sites with no job-board API (including Teamtailor-hosted pages). Both label what they find as Inferred or
 Verified accordingly.
+
+**Sectors and Companies House.** `npm run chbulk` reads Companies House's monthly bulk file (about 470 MB; needs
+`unzip`'s `funzip`) and attaches company number and SIC codes to most organisations; the daily run does this by
+itself once a month. Sector tags are then decided from, in order: the registered SIC code, the website text, the
+roles the organisation is hiring for now, and last of all its name. `npm run sectors` recomputes them.
 
 `npm run import -- --file path/to/register.csv` imports a local copy (the date is read from the file name, or
 pass `--published YYYY-MM-DD`). Re-importing a newer register records what was added, removed or changed.
@@ -101,7 +106,13 @@ never cached, scraped links are only ever http(s), and there is a Content-Securi
 | `packages/http` | Polite fetching shared by resolver and scanner |
 | `db/migrations` | SQL, runs on local Postgres and Supabase |
 | `packages/accounts` | Sign-in links, sessions, profile, saved items, data export and deletion |
+| `jobs` | The daily run: orchestrator, maintenance, sector refresh, digest |
 | `web` | SvelteKit app |
+| `docs` | Contributor guides ([adapters](docs/ADAPTERS.md)) |
+
+## Contributing and security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
 ## Licence and attribution
 

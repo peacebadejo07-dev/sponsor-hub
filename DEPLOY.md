@@ -23,7 +23,7 @@ Everything runs on free tiers: **Supabase** (Postgres), **Cloudflare Workers** (
    npm run db:migrate
    npm run import                         # downloads and imports the Home Office register (about 10 seconds)
    ```
-3. Fill it gradually: the daily scan researches new organisations, finds job boards and scans them. To start faster, run it by hand
+3. Fill it gradually (the first daily run also downloads Companies House's monthly bulk file, about 470 MB, and gives most organisations a company number and SIC codes): the daily scan researches new organisations, finds job boards and scans them. To start faster, run it by hand
    a few times: `npm run daily -- --force`.
 
 Size: the register takes about 85 MB. Job descriptions are not stored (only a short excerpt), and closed roles are deleted after 60 days.
@@ -51,7 +51,7 @@ npx wrangler deploy
 ```
 
 Set these on the Worker (**Settings, Variables and Secrets**, or `npx wrangler secret put NAME`):
-`DATABASE_URL` (secret), `AUTH_SECRET` (secret, the same value as in GitHub), `PUBLIC_BASE_URL`, `RESEND_API_KEY` (secret), `AUTH_FROM`.
+`DATABASE_URL` (secret), `AUTH_SECRET` (secret, the same value as in GitHub), `PUBLIC_BASE_URL`, `RESEND_API_KEY` (secret), `AUTH_FROM`, `CONTACT_EMAIL`.
 Then add your domain under **Domains** and let Cloudflare manage its DNS.
 
 `npm run build` (in `web`) also wraps the adapter's worker with `edge/entry.js` (`scripts/wrap-worker.mjs`). That wrapper stops the adapter's
@@ -63,7 +63,8 @@ wrangler's `main` at your own file: the adapter deletes and rewrites whatever `m
 - [ ] **Verify the database's identity.** `ssl: require` encrypts the connection but does not check who is on the other end. Put the
       provider's CA certificate (Supabase publishes one) in `DATABASE_CA` (GitHub secret and Worker secret) to enforce it.
 - [ ] **Rate-limit the sign-in form.** Add a Cloudflare rate-limiting rule for `POST /login` (and consider Turnstile on the form).
-- [ ] **Add a contact email** to `/privacy` and `/bot` (both currently say "to be added").
+- [ ] **Set `CONTACT_EMAIL`** on the Worker. `/privacy` and `/bot` show it; until it is set they say "Contact details are not configured".
+- [ ] **Replace the repository placeholder** in `BOT_CONTACT` (GitHub variable) and `.env.example` (`YOUR-ACCOUNT/YOUR-REPO`, formerly `OWNER`), and turn on private vulnerability reporting (Settings, Code security) so [SECURITY.md](SECURITY.md) works.
 - [ ] **Verify the Resend domain** and send yourself a sign-in link end to end.
 - [ ] **No "cache everything" rule** in Cloudflare for this site: signed-in pages must never be cached.
 - [ ] Confirm `/status` shows a successful scan after the first scheduled run.

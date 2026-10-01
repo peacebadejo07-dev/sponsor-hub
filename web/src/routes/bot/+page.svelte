@@ -1,3 +1,7 @@
+<script lang="ts">
+  let { data } = $props();
+</script>
+
 <svelte:head><title>About our crawler · Sponsor Hub</title><meta name="description" content="What SponsorHubBot is, what it reads, and how to opt out." /></svelte:head>
 
 <article>
@@ -23,7 +27,7 @@
   <p>To stop the crawler visiting your site, add this to your <code>robots.txt</code>:</p>
   <pre>User-agent: SponsorHubBot
 Disallow: /</pre>
-  <p>Or tell us and we will remove your organisation's listings. [Contact email to be added before launch]</p>
+  <p>Or tell us and we will remove your organisation's listings. {#if data.contact}<a href="mailto:{data.contact}">{data.contact}</a>{:else}Contact details are not configured on this site yet.{/if}</p>
 </article>
 
 <style>

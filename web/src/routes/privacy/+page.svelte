@@ -1,3 +1,7 @@
+<script lang="ts">
+  let { data } = $props();
+</script>
+
 <svelte:head><title>Privacy · Sponsor Hub</title></svelte:head>
 
 <article>
@@ -10,12 +14,15 @@
     <li><b>The preferences you choose</b>: role types, places, working pattern, level, skills, years of experience, minimum salary. All optional.</li>
     <li><b>Whether you need visa sponsorship</b>, only if you choose to say. This is the most sensitive thing we hold. It is optional, you can leave it blank, and it is used only to rank and filter roles for you.</li>
     <li><b>The roles and organisations you save, apply to or hide.</b></li>
+    <li><b>Whether you want the weekly email</b>, off unless you switch it on, and when we last sent it.</li>
   </ul>
   <p>We do not collect your name, CV, address or phone number, and we do not run advertising or tracking.</p>
 
   <h2>Why we use it</h2>
   <p>To sign you in, and to show you roles ranked by how well they fit what you told us. We do not sell or share your data, and we do not use it to profile you for anything else.</p>
 
+  <h2>Our legal basis and how long we keep things</h2>
+  <p>We use your email address and preferences because you asked us to (to sign you in and rank jobs for you), and send the weekly email only if you switched it on, which you can undo with one click from any email. We keep your account until you delete it. Sign-in links expire within minutes and are cleared after two days; sign-in devices expire after at most 90 days.</p>
   <h2>Cookies</h2>
   <p>One cookie, strictly necessary, that keeps you signed in. It is removed when you sign out. There are no analytics or advertising cookies.</p>
 
@@ -24,13 +31,13 @@
   <p>When someone asks for a sign-in link, we keep the email address they typed (even if it has no account) and a scrambled, non-reversible form of their network address for up to two days, only to limit abuse. Signed-in devices are recorded with the browser name and time of last use, and are included when you download your data. Deleted accounts are removed from the live database straight away; copies in the database provider's backups can persist for a short time before they age out.</p>
 
   <h2>Your rights</h2>
-  <p>You can see, correct, download and permanently delete your data at any time from <a href="/profile">your profile</a>. Deleting your account removes your email, preferences and saved items straight away.</p>
+  <p>You can see, correct, download and permanently delete your data at any time from <a href="/profile">your profile</a>. Deleting your account removes your email, preferences and saved items straight away. If you are unhappy with how we handle your data, you can complain to the <a href="https://ico.org.uk/make-a-complaint/">Information Commissioner's Office</a>.</p>
 
   <h2>About the job data</h2>
-  <p>Organisation names come from the Home Office <a href="https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers">register of licensed sponsors</a>, published under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>. Jobs are read from employers' own public job boards. Being on the register does not mean any particular role is sponsored; check each posting.</p>
+  <p>Organisation names come from the Home Office <a href="https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers">register of licensed sponsors</a>, published under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>. Company numbers and activity codes come from Companies House's public data. Jobs are read from employers' own public job boards. Being on the register does not mean any particular role is sponsored; check each posting.</p>
 
   <h2>Contact</h2>
-  <p>[Contact email to be added before launch]</p>
+  {#if data.contact}<p><a href="mailto:{data.contact}">{data.contact}</a></p>{:else}<p class="missing">Contact details are not configured on this site yet.</p>{/if}
 </article>
 
 <style>
@@ -40,4 +47,5 @@
   .lead { color: var(--muted); font-size: 17px; }
   li { margin: 4px 0; }
   a { color: var(--accent); }
+  .missing { color: var(--muted); }
 </style>
