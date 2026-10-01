@@ -83,11 +83,15 @@ const TECH_IMPLIERS: SectorTag[] = [
 
 const TECH_DIRECT = /\btech\b|\btechnolog(y|ies)\b|\btechnologies\b/i;
 
+const NOT_TELECOM_NETWORK = /\b(care|health|nhs|tv|television|radio|broadcast\w*|media|primary|social|support|community|business|charity|family|church)\b/i;
+
 export function classifyName(name: string): SectorTag[] {
   const tags = new Set<SectorTag>();
   for (const [tag, re] of Object.entries(RULES) as [Exclude<SectorTag, 'tech'>, RegExp][]) {
     if (re.test(name)) tags.add(tag);
   }
+  // "Network" alone is ambiguous: a primary care network or a TV network is not telecoms.
+  if (tags.has('telecoms') && !/\btelecom\w*|\bbroadband\b|\bwireless\b|\bsatellite\b/i.test(name) && NOT_TELECOM_NETWORK.test(name)) tags.delete('telecoms');
   if (TECH_DIRECT.test(name) || TECH_IMPLIERS.some((t) => tags.has(t))) tags.add('tech');
   return SECTOR_TAGS.filter((t) => tags.has(t));
 }

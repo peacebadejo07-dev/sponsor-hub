@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "scripts": { "daily": "tsx --env-file-if-exists=../.env src/daily.ts" },
+  "scripts": { "daily": "tsx --env-file-if-exists=../.env src/daily.ts",
+    "sectors": "tsx --env-file-if-exists=../.env src/sectors-cli.ts" },
   "dependencies": { "@sponsored/accounts": "*", "@sponsored/core": "*", "@sponsored/db": "*" }
 }

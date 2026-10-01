@@ -1,4 +1,5 @@
 import type { Sql } from 'postgres';
+import { refreshSectors } from './sectors.ts';
 
 /** Keep the free-tier database small and free of stale data. Returns what was removed. */
 export async function maintenance(sql: Sql) {
@@ -11,5 +12,6 @@ export async function maintenance(sql: Sql) {
   const runs = await sql`delete from scan_runs where started_at < now() - interval '180 days' returning id`;
   const tokens = await sql`delete from login_tokens where created_at < now() - interval '2 days' returning id`;
   const sessions = await sql`delete from sessions where expires_at < now() returning id`;
-  return { closedRolesRemoved: closed.length, scanLogRemoved: scans.length, runLogRemoved: runs.length, loginTokensRemoved: tokens.length, sessionsRemoved: sessions.length };
+  const sectors = await refreshSectors(sql); // after the scan, so live job families are current
+  return { sectorsChanged: sectors.changed, closedRolesRemoved: closed.length, scanLogRemoved: scans.length, runLogRemoved: runs.length, loginTokensRemoved: tokens.length, sessionsRemoved: sessions.length };
 }

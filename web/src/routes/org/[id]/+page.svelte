@@ -9,6 +9,13 @@
   const label = (s?: string) => (s === 'verified' ? 'Verified' : s === 'inferred' ? 'Inferred' : 'Unconfirmed');
   const cls = (s?: string) => (s === 'verified' ? 'verified' : s === 'inferred' ? 'inferred' : 'unconfirmed');
   const tags = $derived(o.all_sector_tags.filter((t) => t !== 'tech' || o.all_sector_tags.length === 1));
+  const SOURCE_TEXT = {
+    sic: 'registered with Companies House',
+    website: "from the organisation's own website",
+    jobs: 'from what it is hiring for now',
+    name: "guessed from the organisation's name"
+  } as const;
+  const evidence = $derived(o.sector_evidence.filter((e) => e.tag !== 'tech' || o.sector_evidence.length === 1));
   const ATS_NAMES: Record<string, string> = {
     greenhouse: 'Greenhouse', lever: 'Lever', ashby: 'Ashby', workable: 'Workable', smartrecruiters: 'SmartRecruiters',
     workday: 'Workday', teamtailor: 'Teamtailor', bamboohr: 'BambooHR', recruitee: 'Recruitee', personio: 'Personio', jsonld: 'Careers page with structured job data'
@@ -86,16 +93,21 @@
   </section>
 
   <section class="card">
-    <h2>Sector <span class="badge inferred">Inferred</span></h2>
+    <h2>Sector {#if o.sector_basis}<span class="badge {o.sector_basis === 'sic' ? 'verified' : 'inferred'}">{o.sector_basis === 'sic' ? 'From official records' : 'Inferred'}</span>{:else}<span class="badge unconfirmed">Not stated</span>{/if}</h2>
     {#if tags.length}
       <p class="tags">{#each tags as t (t)}<span class="tag">{data.sectorLabels[t as keyof typeof data.sectorLabels]}</span>{/each}</p>
-      <p class="source">
-        Guessed from {o.name_sector_tags.length ? 'the organisation name' : ''}{o.name_sector_tags.length && o.profile_sector_tags.length ? ' and ' : ''}{o.profile_sector_tags.length
-          ? prov.sector_tags?.source?.includes('companies_house') ? 'Companies House codes and website text' : 'its website text'
-          : ''}. Can be wrong.
-      </p>
+      <ul class="evidence">
+        {#each evidence as e (e.tag)}
+          <li><strong>{data.sectorLabels[e.tag as keyof typeof data.sectorLabels]}</strong>: {SOURCE_TEXT[e.source]}{#if e.detail} <small>({e.detail})</small>{/if}</li>
+        {/each}
+      </ul>
+      {#if o.sector_basis === 'name'}
+        <p class="source">Last-resort guess from the organisation's name only. No Companies House code, website text or live roles back it up, so it may be wrong.</p>
+      {:else}
+        <p class="source">Sector labels are our reading of these sources and can be wrong.</p>
+      {/if}
     {:else}
-      <p class="muted">No sector identified yet.</p>
+      <p class="muted">Sector not stated. Nothing reliable tells us what this organisation does.</p>
     {/if}
     {#if o.site_description}<p class="desc">“{o.site_description}”<small>From the organisation's own website</small></p>{/if}
   </section>
@@ -154,6 +166,8 @@
   .branches { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px 16px; }
   .branches a[aria-current] { font-weight: 700; color: var(--ink); text-decoration: none; }
   .muted, .source { color: var(--muted); font-size: 13px; margin: 0; }
+  .evidence { margin: 8px 0; padding-left: 18px; font-size: 14px; }
+  .evidence li { margin: 2px 0; }
   .note { font-size: 12px; color: var(--muted); margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--line); }
   .desc { margin: 10px 0 0; font-size: 14px; }
   .tags { margin: 0 0 6px; display: flex; flex-wrap: wrap; gap: 6px; }

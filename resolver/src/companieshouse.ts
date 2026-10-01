@@ -1,6 +1,6 @@
 import { fetchPage } from '@sponsored/http';
 import { coreName, normaliseText } from './names.ts';
-import type { SectorTag } from '@sponsored/core';
+import { sicEvidence, type SectorTag } from '@sponsored/core';
 
 const BASE = 'https://api.company-information.service.gov.uk';
 
@@ -11,26 +11,7 @@ export interface CompanyInfo {
   sic: string[];
 }
 
-export function sicToTags(sic: string[]): SectorTag[] {
-  const t = new Set<SectorTag>();
-  for (const code of sic) {
-    const c2 = code.slice(0, 2);
-    const c4 = code.slice(0, 4);
-    if (c2 === '62') ['software', 'it_services', 'tech'].forEach((x) => t.add(x as SectorTag));
-    else if (c4 === '5821') ['games', 'tech'].forEach((x) => t.add(x as SectorTag));
-    else if (c4 === '5829') ['software', 'tech'].forEach((x) => t.add(x as SectorTag));
-    else if (c2 === '63') ['data', 'tech'].forEach((x) => t.add(x as SectorTag));
-    else if (c2 === '61') ['telecoms', 'tech'].forEach((x) => t.add(x as SectorTag));
-    else if (c2 === '26') ['electronics', 'tech'].forEach((x) => t.add(x as SectorTag));
-    else if (c4 === '7410') t.add('design');
-    else if (c4 === '7022') t.add('consulting');
-    else if (c2 === '64' || c2 === '65' || c2 === '66') t.add('finance');
-    else if (c2 === '86' || c2 === '21') t.add('healthcare');
-    else if (c2 === '85' || c2 === '72') t.add('education');
-    else if (c2 === '71') t.add('engineering');
-  }
-  return [...t];
-}
+export const sicToTags = (sic: string[]): SectorTag[] => [...new Set(sicEvidence(sic).map((e) => e.tag))];
 
 /** Pure: choose the matching active company from search results. */
 export function pickCompany(items: any[], orgName: string, town?: string): { number: string; title: string } | null {

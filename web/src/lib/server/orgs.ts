@@ -100,15 +100,15 @@ export interface OrgDetail extends OrgRow {
   ats_slug: string | null;
   website_candidate: string | null;
   website_source: string | null;
-  name_sector_tags: string[];
-  profile_sector_tags: string[];
+  sector_basis: 'sic' | 'website' | 'jobs' | 'name' | null;
+  sector_evidence: { tag: string; source: 'sic' | 'website' | 'jobs' | 'name'; detail?: string }[];
   provenance: Record<string, { status: string; source: string; confidence?: number; detail?: string; checked_at: string }>;
 }
 
 export async function getOrg(id: number) {
   const [org] = await sql<OrgDetail[]>`
     select o.id, o.name, o.name_key, o.town, o.county, o.rating, o.routes, o.worker_types,
-           e.all_sector_tags, o.sector_tags as name_sector_tags, coalesce(p.sector_tags, '{}') as profile_sector_tags,
+           e.all_sector_tags, e.sector_basis, e.sector_evidence,
            p.resolve_status, p.website, p.website_confidence, p.website_source, p.website_candidate,
            p.careers_url, p.ats_type, p.ats_slug, p.site_title, p.site_description, p.wikidata_id,
            p.companies_house_no, p.incorporated_on::text, coalesce(p.sic_codes, '{}') as sic_codes,

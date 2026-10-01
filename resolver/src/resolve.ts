@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { classifyName, type SectorTag } from '@sponsored/core';
+import { classifyName, sectorsFromText, type SectorTag } from '@sponsored/core';
 import { fetchPage, hostResolves } from '@sponsored/http';
 import { domainCandidates, verifyHomepage, coreName, labelOf, BOT_CHALLENGE, type Verdict } from './names.ts';
 import { detectAts, extractCareersLinks, COMMON_CAREER_PATHS, type AtsHit } from './ats.ts';
@@ -39,14 +39,7 @@ export interface ProfileResult {
 const ACCEPT = 0.6;
 const CANDIDATE = 0.4;
 
-/** Sectors we trust a homepage description to indicate (name-style 'digital'/'consulting' are too noisy in prose). */
-const TEXT_TAGS = new Set<SectorTag>(['software', 'ai', 'data', 'cloud', 'cybersecurity', 'it_services', 'fintech', 'design', 'games', 'telecoms', 'electronics']);
-
-export function sectorsFromText(text: string): SectorTag[] {
-  const tags = classifyName(text).filter((t) => TEXT_TAGS.has(t));
-  if (tags.length) tags.push('tech');
-  return [...new Set(tags)];
-}
+export { sectorsFromText };
 
 interface Candidate {
   url: string;

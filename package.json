@@ -25,6 +25,7 @@
     "discover": "npm run discover -w scanner --",
     "reverify": "npm run reverify -w resolver --",
     "daily": "npm run daily -w jobs --",
+    "sectors": "npm run sectors -w jobs --",
     "deploy": "npm run build -w web && cd web && wrangler deploy"
   },
   "devDependencies": {
