@@ -1,12 +1,14 @@
 import type { PageServerLoad } from './$types';
 import { OPP_PAGE_SIZE, searchOpps, topCities, oppSummary, type OppFilters } from '$lib/server/opps';
 import { ROLE_FAMILIES } from '@sponsored/core';
+import { marksFor } from '@sponsored/accounts';
+import { sql } from '$lib/server/db';
 
 const clean = (s: string) => s.replace(/[\u0000-\u001f]/g, '');
 const all = (u: URL, k: string) => u.searchParams.getAll(k).map(clean).filter(Boolean).slice(0, 12);
 const pick = (vals: string[], allowed: readonly string[]) => vals.filter((v) => allowed.includes(v));
 
-export const load: PageServerLoad = async ({ url, setHeaders }) => {
+export const load: PageServerLoad = async ({ url, setHeaders, locals }) => {
   const since = Number(url.searchParams.get('since'));
   const f: OppFilters = {
     q: clean(url.searchParams.get('q') ?? '').trim().slice(0, 80),
@@ -23,5 +25,7 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
   };
   setHeaders({ 'cache-control': 'public, max-age=60, s-maxage=300' });
   const [result, cities, summary] = await Promise.all([searchOpps(f), topCities(), oppSummary()]);
-  return { filters: f, ...result, cities, summary, pageSize: OPP_PAGE_SIZE, pages: Math.max(1, Math.ceil(result.total / OPP_PAGE_SIZE)) };
+  // Signed-in responses are private (see hooks.server.ts), so per-user marks are safe to include here.
+  const marks = locals.user ? Object.fromEntries(await marksFor(sql, locals.user.userId, result.rows.map((r) => r.id))) : {};
+  return { filters: f, ...result, cities, summary, loggedIn: !!locals.user, marks, pageSize: OPP_PAGE_SIZE, pages: Math.max(1, Math.ceil(result.total / OPP_PAGE_SIZE)) };
 };

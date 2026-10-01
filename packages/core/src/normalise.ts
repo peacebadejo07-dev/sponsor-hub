@@ -50,3 +50,17 @@ export function parseTypeAndRating(raw: string): { workerType: WorkerType; ratin
   else if (/\(b rating\)/i.test(s)) rating = 'B';
   return { workerType, rating };
 }
+
+/**
+ * Only http(s) URLs may ever become links. Scraped data (a job's apply URL, a company's careers page) is untrusted:
+ * a `javascript:` or `data:` URL in an href would run script on our own origin when a signed-in person clicks it.
+ */
+export function safeHttpUrl(u: string | null | undefined): string | null {
+  if (!u) return null;
+  try {
+    const x = new URL(String(u).trim());
+    return x.protocol === 'http:' || x.protocol === 'https:' ? x.toString() : null;
+  } catch {
+    return null;
+  }
+}

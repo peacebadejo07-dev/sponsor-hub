@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTypeAndRating, titleCase, key, classifyName, aggregateRegister } from '../src/index.ts';
+import { parseTypeAndRating, titleCase, key, classifyName, aggregateRegister, safeHttpUrl } from '../src/index.ts';
 
 describe('parseTypeAndRating', () => {
   it.each([
@@ -63,5 +63,13 @@ describe('aggregateRegister', () => {
   });
   it('skips blank names', () => {
     expect(aggregateRegister([row('   ', 'x', 'Worker (A rating)', 'Skilled Worker')])).toHaveLength(0);
+  });
+});
+
+describe('safeHttpUrl', () => {
+  it('allows http(s) only', () => {
+    expect(safeHttpUrl('https://example.com/a?b=1')).toBe('https://example.com/a?b=1');
+    expect(safeHttpUrl('http://example.com')).toBe('http://example.com/');
+    for (const bad of ['javascript:alert(1)', 'data:text/html,x', 'ftp://x.test', 'mailto:a@b.c', '//x.test', '', null, undefined, 'x']) expect(safeHttpUrl(bad as never), String(bad)).toBeNull();
   });
 });

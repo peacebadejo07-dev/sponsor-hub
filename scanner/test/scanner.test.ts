@@ -314,3 +314,20 @@ describe('json-ld job link discovery', () => {
     expect(l.includes('https://acme.test/careers')).toBe(false);
   });
 });
+
+describe('untrusted URLs never become links', () => {
+  const base: RawJob = { externalId: '1', title: 'Data Engineer', locations: ['London, UK'], countryCodes: [], applyUrl: 'https://x.test/apply', postedAt: null, department: null, employmentTypeRaw: null, workMode: null, descriptionText: 'x', salary: null };
+  it('rejects javascript:, data: and other schemes as an apply link', () => {
+    for (const bad of ['javascript:alert(1)', 'JaVaScRiPt:fetch("/profile/export")', 'data:text/html,<script>alert(1)</script>', 'vbscript:x', 'file:///etc/passwd', '//evil.test/x', '', 'not a url']) {
+      expect(run({ ...base, applyUrl: bad }), bad).toEqual({ skip: 'no_apply_url' });
+    }
+  });
+  it('keeps normal http and https links, normalised', () => {
+    expect((run(base) as any).apply_url).toBe('https://x.test/apply');
+    expect((run({ ...base, applyUrl: ' http://x.test/a b ' }) as any).apply_url).toBe('http://x.test/a%20b');
+  });
+  it('a JobPosting whose url is javascript: cannot get through', () => {
+    const j = mapJobPosting({ '@type': 'JobPosting', title: 'Data Engineer', description: 'x', url: 'javascript:alert(document.cookie)', jobLocation: { address: { addressCountry: 'GB' } } }, 'https://acme.test/careers/1')!;
+    expect(run(j)).toEqual({ skip: 'no_apply_url' });
+  });
+});

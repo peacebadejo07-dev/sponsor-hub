@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import {
-  classifyRole, classifySeniority, extractSkills, extractYears, mentionsDegree, inferEmploymentType, inferWorkMode,
+  safeHttpUrl, classifyRole, classifySeniority, extractSkills, extractYears, mentionsDegree, inferEmploymentType, inferWorkMode,
   isUkLocation, mapEmploymentType, parseSalary, sponsorshipSignal, ukCity, type RoleFamily
 } from '@sponsored/core';
 import type { RawJob, Source } from './types.ts';
@@ -50,7 +50,8 @@ export function screen(raw: RawJob): { family: RoleFamily } | { skip: Skip } {
 }
 
 export function normalise(raw: RawJob, family: RoleFamily): OppRow | { skip: Skip } {
-  if (!raw.applyUrl) return { skip: 'no_apply_url' };
+  const applyUrl = safeHttpUrl(raw.applyUrl);
+  if (!applyUrl) return { skip: 'no_apply_url' }; // missing, or not an http(s) link (never store a javascript: URL)
   const text = raw.descriptionText ?? '';
   const prov: Record<string, Prov> = {
     role_family: { status: 'inferred', source: 'job title' }
@@ -58,7 +59,7 @@ export function normalise(raw: RawJob, family: RoleFamily): OppRow | { skip: Ski
 
   // Salary: structured API data is verified; a range parsed out of the text is inferred.
   let salary = raw.salary;
-  if (salary) prov.salary = { status: 'verified', source: `${raw.applyUrl ? 'job board' : 'api'} pay field` };
+  if (salary) prov.salary = { status: 'verified', source: 'job board pay field' };
   else {
     salary = text ? parseSalary(text) : null;
     prov.salary = salary
@@ -125,7 +126,7 @@ export function normalise(raw: RawJob, family: RoleFamily): OppRow | { skip: Ski
     skills: text ? extractSkills(`${raw.title}\n${text}`) : extractSkills(raw.title),
     years_experience: years,
     degree_mentioned: text ? mentionsDegree(text) : null,
-    apply_url: raw.applyUrl,
+    apply_url: applyUrl,
     excerpt: text ? text.replace(/\s+/g, ' ').slice(0, 500) : null,
     sponsorship_signal: sp.signal,
     sponsorship_snippet: sp.snippet,

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { RATING_LABELS, RATING_HELP } from '$lib/labels';
+  import { safeHref } from '$lib/safeHref';
   let { data } = $props();
   const o = $derived(data.org);
   const prov = $derived(data.org.provenance);
@@ -20,8 +21,20 @@
 <p class="back"><a href="/">← All organisations</a></p>
 
 <header class="head">
-  <h1>{o.name.trim()}</h1>
-  <p class="sub">{[o.town, o.county].filter(Boolean).join(', ') || 'Location not listed'}</p>
+  <div class="titlerow">
+    <div>
+      <h1>{o.name.trim()}</h1>
+      <p class="sub">{[o.town, o.county].filter(Boolean).join(', ') || 'Location not listed'}</p>
+    </div>
+    {#if data.loggedIn}
+      <form method="POST" action="/api/save-org">
+        <input type="hidden" name="org_id" value={o.id} /><input type="hidden" name="saved" value={data.following ? '0' : '1'} /><input type="hidden" name="return" value={`/org/${o.id}`} />
+        <button type="submit" class="follow" class:on={data.following} aria-pressed={data.following}>{data.following ? '✓ Following' : '+ Follow'}</button>
+      </form>
+    {:else}
+      <a class="follow link" href={`/login?next=${encodeURIComponent(`/org/${o.id}`)}`}>Sign in to follow</a>
+    {/if}
+  </div>
 </header>
 
 <div class="grid">
@@ -48,7 +61,7 @@
         <dt>Website <span class="badge {cls(prov.website?.status)}">{label(prov.website?.status)}</span></dt>
         <dd>
           {#if o.website}
-            <a href={o.website} rel="noopener nofollow" target="_blank">{o.website.replace(/^https?:\/\//, '')} ↗</a>
+            <a href={safeHref(o.website)} rel="noopener nofollow" target="_blank">{o.website.replace(/^https?:\/\//, '')} ↗</a>
             {#if prov.website?.detail}<small>{prov.website.detail}{prov.website.confidence ? ` (confidence ${Math.round(prov.website.confidence * 100)}%)` : ''}</small>{/if}
           {:else if o.website_candidate}
             <span class="muted">Possible match, not verified: {o.website_candidate.replace(/^https?:\/\//, '')}</span>
@@ -60,7 +73,7 @@
         <dt>Careers page <span class="badge {cls(prov.careers_url?.status)}">{label(prov.careers_url?.status)}</span></dt>
         <dd>
           {#if o.careers_url}
-            <a href={o.careers_url} rel="noopener nofollow" target="_blank">{o.careers_url.replace(/^https?:\/\//, '')} ↗</a>
+            <a href={safeHref(o.careers_url)} rel="noopener nofollow" target="_blank">{o.careers_url.replace(/^https?:\/\//, '')} ↗</a>
             {#if prov.careers_url?.detail}<small>{prov.careers_url.detail}</small>{/if}
           {:else}<span class="muted">{o.website ? 'No careers page found' : 'Needs a website first'}</span>{/if}
         </dd>
@@ -123,6 +136,11 @@
   .back a { color: var(--muted); }
   h1 { font-size: 26px; margin: 0; letter-spacing: -0.015em; overflow-wrap: anywhere; }
   .sub { margin: 2px 0 20px; color: var(--muted); }
+  .titlerow { display: flex; justify-content: space-between; gap: 12px; align-items: start; flex-wrap: wrap; }
+  .titlerow form { margin: 0; }
+  .follow { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 14px; font-size: 14px; cursor: pointer; text-decoration: none; color: inherit; }
+  .follow.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .follow.link { color: var(--accent); font-weight: 600; }
   .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
   .wide { grid-column: 1 / -1; }

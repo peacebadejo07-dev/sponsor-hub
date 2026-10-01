@@ -1,6 +1,8 @@
 <script lang="ts">
   import { ROLE_LABELS, type RoleFamily } from '@sponsored/core';
-  import type { OppRow } from '$lib/server/opps';
+  import { page } from '$app/state';
+  import OppCard from '$lib/OppCard.svelte';
+  import { ago } from '$lib/labels';
   import { onMount } from 'svelte';
   let { data } = $props();
   // Open on desktop; on phones start collapsed unless filters are already active, so results are visible.
@@ -11,6 +13,7 @@
 
   const f = $derived(data.filters);
   const fmt = (n: number) => n.toLocaleString('en-GB');
+  const returnTo = $derived(page.url.pathname + page.url.search);
   const activeCount = $derived(
     f.families.length + f.modes.length + f.employment.length + f.sponsorship.length + f.seniority.length +
       (f.city ? 1 : 0) + (f.q ? 1 : 0) + (f.since ? 1 : 0) + (f.hasSalary ? 1 : 0) + (f.hideStale ? 1 : 0)
@@ -26,24 +29,9 @@
     unclear: 'Wording is conflicting',
     unmentioned: 'Does not mention sponsorship'
   };
-  const PERIOD: Record<string, string> = { year: 'a year', month: 'a month', day: 'a day', hour: 'an hour' };
-  const SYMBOL: Record<string, string> = { GBP: '£', USD: '$', EUR: '€' };
 
-  const money = (o: OppRow) => {
-    if (o.salary_min == null) return null;
-    const s = SYMBOL[o.salary_currency ?? ''] ?? '';
-    return `${s}${fmt(o.salary_min)} – ${s}${fmt(o.salary_max ?? o.salary_min)} ${PERIOD[o.salary_period ?? 'year']}`;
-  };
 
-  const status = (o: OppRow, field: string) => o.provenance?.[field]?.status ?? 'unconfirmed';
-  const cls = (s: string) => (s === 'verified' ? 'verified' : s === 'inferred' ? 'inferred' : 'unconfirmed');
-  const label = (s: string) => (s === 'verified' ? 'Verified' : s === 'inferred' ? 'Inferred' : 'Not stated');
 
-  function ago(iso: string | null): string {
-    if (!iso) return '';
-    const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-    return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d < 60 ? `${d} days ago` : `${Math.floor(d / 30)} months ago`;
-  }
 
   function pageHref(p: number) {
     const u = new URLSearchParams();
@@ -171,53 +159,7 @@
     {:else}
       <ul class="list">
         {#each data.rows as o (o.id)}
-          {@const salary = money(o)}
-          <li class="card">
-            <div class="top">
-              <div>
-                <h2>{o.title}</h2>
-                <p class="org"><a href={`/org/${o.org_id}`}>{o.org_name.trim()}</a> <span class="badge verified" title="Listed on the Home Office register of licensed sponsors">Licensed sponsor</span></p>
-              </div>
-              <a class="apply" href={o.apply_url} rel="noopener nofollow" target="_blank">Apply ↗</a>
-            </div>
-
-            <dl class="facts">
-              <div>
-                <dt>Location</dt>
-                <dd title={o.location_raw.replaceAll(' | ', ' · ')}>{o.location_raw.replaceAll(' | ', ' · ').slice(0, 70)}{o.location_raw.length > 70 ? '…' : ''}</dd>
-              </div>
-              <div>
-                <dt>Working pattern <span class="badge {cls(status(o, 'work_mode'))}">{label(status(o, 'work_mode'))}</span></dt>
-                <dd>{o.work_mode ? WORK[o.work_mode] : '—'}</dd>
-              </div>
-              <div>
-                <dt>Employment <span class="badge {cls(status(o, 'employment_type'))}">{label(status(o, 'employment_type'))}</span></dt>
-                <dd>{o.employment_type ? EMP[o.employment_type] : '—'}</dd>
-              </div>
-              <div>
-                <dt>Salary <span class="badge {cls(status(o, 'salary'))}">{label(status(o, 'salary'))}</span></dt>
-                <dd>{salary ?? '—'}</dd>
-              </div>
-            </dl>
-
-            <div class="spons">
-              <span class="badge {cls(status(o, 'sponsorship'))}">{label(status(o, 'sponsorship'))}</span>
-              <span>This posting: <strong>{SPONSOR[o.sponsorship_signal]}</strong></span>
-              {#if o.sponsorship_snippet}
-                <details><summary>See the wording</summary><blockquote>“…{o.sponsorship_snippet}…”</blockquote></details>
-              {/if}
-            </div>
-
-            <p class="meta">
-              <span class="tag">{ROLE_LABELS[o.role_family as RoleFamily]}</span>
-              {#if o.seniority}<span class="tag">{LEVEL[o.seniority]}</span>{/if}
-              {#each o.skills.slice(0, 5) as s (s)}<span class="tag skill">{s}</span>{/each}
-            </p>
-            <p class="dates">
-              Found {ago(o.first_seen_at)} · last verified {ago(o.last_seen_at)}{#if o.changed_at && Date.now() - new Date(o.changed_at).getTime() < 14 * 86400000} · updated {ago(o.changed_at)}{/if}
-              {#if o.stale_reason}<span class="stale" title="Long-running or reposted ads are sometimes no longer open">⚠ {o.stale_reason}</span>{/if}
-            </p>
-          </li>
+          <OppCard {o} loggedIn={data.loggedIn} mark={data.marks[o.id] ?? null} returnTo={returnTo} />
         {/each}
       </ul>
 
@@ -260,33 +202,12 @@
   .primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 8px; padding: 9px 16px; font-weight: 600; cursor: pointer; }
   .reset { font-size: 14px; color: var(--muted); }
 
-  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
-  .top { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
-  h2 { font-size: 17px; margin: 0; font-weight: 600; overflow-wrap: anywhere; }
-  .org { margin: 3px 0 0; font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
-  .org a { font-weight: 500; }
-  .apply { background: var(--accent); color: var(--accent-ink); text-decoration: none; font-weight: 600; font-size: 14px; padding: 7px 14px; border-radius: 8px; white-space: nowrap; }
-  .facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 16px; margin: 14px 0 0; }
-  dt { font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-  dd { margin: 2px 0 0; font-size: 14px; overflow-wrap: anywhere; }
-  .spons { margin: 14px 0 0; padding: 10px 12px; background: var(--bg); border-radius: 8px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
-  .spons details { flex-basis: 100%; font-size: 13px; color: var(--muted); }
-  .spons summary { cursor: pointer; }
-  blockquote { margin: 6px 0 0; padding-left: 10px; border-left: 3px solid var(--line); overflow-wrap: anywhere; }
-  .meta { margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
-  .tag { font-size: 12px; background: var(--bg); border: 1px solid var(--line); padding: 1px 8px; border-radius: 99px; }
-  .tag.skill { color: var(--muted); }
-  .dates { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
-  .stale { margin-left: 8px; color: var(--inferred); font-weight: 600; }
+  .list { margin: 0; padding: 0; display: grid; gap: 12px; }
   .empty { background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); padding: 28px; text-align: center; color: var(--muted); }
   .empty strong { color: var(--ink); }
   .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; color: var(--muted); font-size: 14px; }
   .pager a { color: var(--accent); font-weight: 600; text-decoration: none; padding: 6px 4px; }
   a { color: inherit; }
-  .org a:hover { text-decoration: underline; }
 
-  @media (max-width: 900px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } .filters { position: static; max-height: none; } }
-  @media (max-width: 480px) { .top { flex-direction: column; } .apply { align-self: stretch; text-align: center; } }
 </style>

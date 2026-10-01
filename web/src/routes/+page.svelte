@@ -1,7 +1,9 @@
 <script lang="ts">
   import { RATING_LABELS, RATING_HELP } from '$lib/labels';
+  import { safeHref } from '$lib/safeHref';
   import { SECTOR_TAGS } from '@sponsored/core';
   import { onMount } from 'svelte';
+  import { page } from '$app/state';
   let { data } = $props();
   // Open on desktop; on phones start collapsed unless filters are already active, so results are visible.
   let filtersOpen = $state(true);
@@ -31,6 +33,10 @@
   );
   const fmt = (n: number) => n.toLocaleString('en-GB');
 </script>
+
+{#if page.url.searchParams.get('deleted') === '1'}
+  <p class="banner" role="status">Your account and everything saved with it have been deleted.</p>
+{/if}
 
 <div class="head">
   <div>
@@ -132,8 +138,8 @@
             <p class="routes">{o.routes.join(' · ')}</p>
             {#if o.website || o.careers_url}
               <p class="links">
-                {#if o.website}<a href={o.website} rel="noopener nofollow" target="_blank">{o.website.replace(/^https?:\/\/(www\.)?/, '')}</a>{/if}
-                {#if o.careers_url}<a class="careers" href={o.careers_url} rel="noopener nofollow" target="_blank">Careers page ↗</a>{/if}
+                {#if o.website}<a href={safeHref(o.website)} rel="noopener nofollow" target="_blank">{o.website.replace(/^https?:\/\/(www\.)?/, '')}</a>{/if}
+                {#if o.careers_url}<a class="careers" href={safeHref(o.careers_url)} rel="noopener nofollow" target="_blank">Careers page ↗</a>{/if}
                 <span class="badge inferred" title="Found automatically; the match may be wrong">Inferred</span>
               </p>
             {:else if o.resolve_status === 'candidate'}
@@ -163,6 +169,7 @@
 </div>
 
 <style>
+  .banner { background: var(--accent-soft); border-radius: 8px; padding: 12px 14px; margin: 0 0 16px; }
   .head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px; align-items: end; margin-bottom: 20px; }
   h1 { font-size: 24px; margin: 0 0 2px; letter-spacing: -0.015em; }
   .sub { margin: 0; color: var(--muted); }

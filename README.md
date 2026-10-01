@@ -3,9 +3,9 @@
 One dashboard for finding UK organisations licensed to sponsor workers, and (in later milestones) the live
 tech roles they advertise. Open source (MIT), built to run on free tiers. See [PLAN.md](PLAN.md).
 
-**Status: M3, opportunity scanner.** Register importer, organisation browser, a resolver that finds each
+**Status: M4, accounts and matching.** Register importer, organisation browser, a resolver that finds each
 organisation's website, careers page and job-board system, and a scanner that reads those job boards for UK tech
-roles. Matching, accounts and the daily schedule come in M4-M5.
+roles. Accounts (passwordless email sign-in), a profile, ranked "For you" roles with plain-English reasons, and saved roles and organisations are built. The daily schedule and deployment come in M5-M6.
 
 ## Data labels
 
@@ -67,6 +67,17 @@ Verified accordingly.
 `npm run import -- --file path/to/register.csv` imports a local copy (the date is read from the file name, or
 pass `--published YYYY-MM-DD`). Re-importing a newer register records what was added, removed or changed.
 
+## Accounts and matching
+
+Sign in with an emailed link (no passwords). In development the link is printed to the server console. Each person can
+set optional preferences (role types, places, working pattern, level, skills, minimum salary, and whether they need visa
+sponsorship), and **For you** ranks live roles by fit. Every score comes with the reasons behind it, only the questions
+a person answered count, and a refusal to sponsor hides a role only for someone who said they need sponsorship. Saved
+roles, hidden roles and followed organisations live under **Saved**. From **Profile** a person can download all their
+data or delete their account (which removes everything). Security notes: tokens and sessions are stored hashed, sign-in
+links are single-use and expire in 15 minutes, state-changing requests must come from this site, signed-in pages are
+never cached, scraped links are only ever http(s), and there is a Content-Security-Policy.
+
 ## Layout
 
 | Path | Purpose |
@@ -77,6 +88,7 @@ pass `--published YYYY-MM-DD`). Re-importing a newer register records what was a
 | `scanner` | Job-board adapters, normalisation, job lifecycle |
 | `packages/http` | Polite fetching shared by resolver and scanner |
 | `db/migrations` | SQL, runs on local Postgres and Supabase |
+| `packages/accounts` | Sign-in links, sessions, profile, saved items, data export and deletion |
 | `web` | SvelteKit app |
 
 ## Licence and attribution
