@@ -15,7 +15,11 @@ const HOST_INTERVALS: Record<string, number> = {
   'www.wikidata.org': 300,
   'api.company-information.service.gov.uk': 600,
   'boards-api.greenhouse.io': 300,
-  'api.lever.co': 300
+  'api.lever.co': 300,
+  'api.eu.lever.co': 300,
+  'api.ashbyhq.com': 300,
+  'apply.workable.com': 300,
+  'api.smartrecruiters.com': 300
 };
 const nextSlot = new Map<string, number>();
 

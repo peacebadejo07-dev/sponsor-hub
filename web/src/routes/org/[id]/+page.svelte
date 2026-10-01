@@ -8,7 +8,11 @@
   const label = (s?: string) => (s === 'verified' ? 'Verified' : s === 'inferred' ? 'Inferred' : 'Unconfirmed');
   const cls = (s?: string) => (s === 'verified' ? 'verified' : s === 'inferred' ? 'inferred' : 'unconfirmed');
   const tags = $derived(o.all_sector_tags.filter((t) => t !== 'tech' || o.all_sector_tags.length === 1));
-  const atsName = (a: string | null) => (a ? a.charAt(0).toUpperCase() + a.slice(1) : null);
+  const ATS_NAMES: Record<string, string> = {
+    greenhouse: 'Greenhouse', lever: 'Lever', ashby: 'Ashby', workable: 'Workable', smartrecruiters: 'SmartRecruiters',
+    workday: 'Workday', jsonld: 'Careers page with structured job data'
+  };
+  const atsName = (a: string | null) => (a ? (ATS_NAMES[a] ?? a) : null);
 </script>
 
 <svelte:head><title>{o.name.trim()} · Sponsor Hub</title></svelte:head>
@@ -61,8 +65,8 @@
           {:else}<span class="muted">{o.website ? 'No careers page found' : 'Needs a website first'}</span>{/if}
         </dd>
         {#if o.ats_type}
-          <dt>Job board system <span class="badge verified">Verified</span></dt>
-          <dd>{atsName(o.ats_type)}{#if o.ats_slug} <small>{o.ats_slug}</small>{/if}</dd>
+          <dt>Job board system <span class="badge {cls(prov.ats?.status)}">{label(prov.ats?.status)}</span></dt>
+          <dd>{atsName(o.ats_type)}{#if o.ats_slug && o.ats_type !== 'jsonld'} <small>{o.ats_slug}</small>{/if}{#if prov.ats?.detail}<small>{prov.ats.detail}</small>{/if}</dd>
         {/if}
       </dl>
     {/if}

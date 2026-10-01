@@ -26,7 +26,7 @@ const targets = await sql<Target[]>`
   select p.name_key, p.ats_type, p.ats_slug
   from org_profiles p
   left join lateral (select started_at, ok from org_scans s where s.name_key = p.name_key order by started_at desc limit 1) ls on true
-  where p.resolve_status = 'resolved' and p.ats_type in ${sql(Object.keys(ADAPTERS))} and p.ats_slug is not null
+  where p.ats_type in ${sql(Object.keys(ADAPTERS))} and p.ats_slug is not null
     and ${orgLike ? sql`p.name_key like ${'%' + orgLike.toLowerCase() + '%'}` : sql`true`}
     and (${force} or ls.started_at is null
          or (ls.ok and ls.started_at < now() - interval '20 hours')

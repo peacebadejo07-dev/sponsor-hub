@@ -182,3 +182,66 @@ describe('safety and text sectors', () => {
     expect(sectorsFromText('Our online shop for flowers')).toEqual([]);
   });
 });
+
+import { slugCandidates, boardNameMatches, textMentionsOrg } from '../src/probe.ts';
+
+describe('board probing: slug candidates', () => {
+  it('puts the website label first, then name variants, without duplicates', () => {
+    expect(slugCandidates({ name: 'Monzo Bank Ltd', website: 'https://monzo.com' })).toEqual(['monzo', 'monzobank', 'monzo-bank']);
+  });
+  it('works from the name alone and drops unusable slugs', () => {
+    const c = slugCandidates({ name: 'Acme Software Limited' });
+    expect(c[0]).toBe('acmesoftware');
+    expect(c).toContain('acme');
+    expect(slugCandidates({ name: '1 AB Ltd' }).every((s) => /^[a-z0-9][a-z0-9-]{2,40}$/.test(s))).toBe(true);
+  });
+});
+
+describe('board probing: does a board belong to the organisation?', () => {
+  it('matches the company name on the board', () => {
+    expect(boardNameMatches('Monzo', { name: 'Monzo Bank Ltd', website: 'https://monzo.com' })).toBe(true);
+    expect(boardNameMatches('Monzo', { name: 'Monzo Bank Ltd' })).toBe(false); // prefix match, nothing corroborates it
+    expect(boardNameMatches('Wise', { name: 'Wise Payments Limited', website: 'https://wise.com' })).toBe(true);
+    expect(boardNameMatches('Acme Software', { name: 'Acme Software Limited' })).toBe(true);
+  });
+  it('needs corroboration when the board name is only the start of the organisation name', () => {
+    // "Abacus" is shared by many unrelated companies.
+    expect(boardNameMatches('ABACUS', { name: 'Abacus Information Technology UK Limited' })).toBe(false);
+    expect(boardNameMatches('ABACUS', { name: 'Abacus Information Technology UK Limited', website: 'https://www.abacusit.co.uk' })).toBe(false);
+    expect(boardNameMatches('ABACUS', { name: 'Abacus Information Technology UK Limited', website: 'https://abacus.com' })).toBe(true);
+    // Even a long word is not enough on its own: "Atlantis" and "Blueprint" are ordinary words.
+    expect(boardNameMatches('Atlantis', { name: 'Atlantis Technology Solutions Limited' })).toBe(false);
+    expect(boardNameMatches('Blueprint', { name: 'Blueprint Technologies Limited' })).toBe(false);
+    expect(boardNameMatches('Darktrace', { name: 'Darktrace Holdings Limited', website: 'https://www.darktrace.com' })).toBe(true);
+    expect(boardNameMatches('accesso', { name: 'accesso Technology Group', website: 'https://accesso.com' })).toBe(true);
+  });
+  it('rejects different companies, including look-alikes', () => {
+    expect(boardNameMatches('Monzo Foods', { name: 'Monzo Bank Ltd' })).toBe(false); // same first word, different company
+    expect(boardNameMatches('Zeta Bakery', { name: 'Monzo Bank Ltd' })).toBe(false);
+    expect(boardNameMatches('Monz', { name: 'Monzo Bank Ltd' })).toBe(false);
+    expect(boardNameMatches(null, { name: 'Monzo Bank Ltd' })).toBe(false);
+  });
+  it('does not accept a name made only of generic words without a matching website', () => {
+    expect(boardNameMatches('AI TECH', { name: 'AI Tech Ltd' })).toBe(false);
+    expect(boardNameMatches('AI TECH', { name: 'AI Tech Ltd', website: 'https://aitech.co.uk' })).toBe(true);
+  });
+  it('does not accept a bare generic word without a matching website', () => {
+    expect(boardNameMatches('Delta', { name: 'Delta Limited' })).toBe(false);
+    expect(boardNameMatches('Delta', { name: 'Delta Limited', website: 'https://delta.co.uk' })).toBe(true);
+    expect(boardNameMatches('Delta', { name: 'Delta Limited', website: 'https://deltaairlines.com' })).toBe(false);
+  });
+});
+
+describe('board probing: job text must name the organisation (Lever / Ashby)', () => {
+  it('accepts text that names the organisation', () => {
+    expect(textMentionsOrg(['About Acme Software: we build tools'], { name: 'Acme Software Ltd' })).toBe(true);
+  });
+  it('rejects text about someone else', () => {
+    expect(textMentionsOrg(['About Zeta Bakery: we bake bread'], { name: 'Acme Software Ltd' })).toBe(false);
+  });
+  it('accepts a distinctive brand only when the domain agrees', () => {
+    const t = ['Join Worldline today'];
+    expect(textMentionsOrg(t, { name: 'Worldline IT Services UK Limited', website: 'https://worldline.com' })).toBe(true);
+    expect(textMentionsOrg(t, { name: 'Worldline IT Services UK Limited' })).toBe(false);
+  });
+});

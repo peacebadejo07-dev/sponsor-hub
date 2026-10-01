@@ -43,6 +43,8 @@ addresses, and does not try to get past bot-protection pages. Sites that block a
 unverified candidates.
 
 ```bash
+npm run probe -- --limit 500                  # guess job-board addresses for organisations with none, then verify
+npm run discover -- --limit 200               # find careers pages that publish schema.org JobPosting data
 npm run scan -- --limit 50                    # scan boards not checked in the last 20 hours
 npm run scan -- --org monzo --force --dry-run
 ```
@@ -54,6 +56,13 @@ missing from two successful scans is marked expired, and a failed fetch never ex
 of each description is stored, to stay inside free database limits. Some employers do not allow public API access (some Ashby
 boards, some Workday tenants return HTTP 422); those boards are recorded as failed and retried every 3 days. Workday
 boards are listed with a UK location filter, so a global employer costs a handful of requests.
+
+**Finding more boards.** Most organisations do not link a job board from their homepage, so two extra steps widen
+coverage. `probe` guesses board addresses (e.g. `boards.greenhouse.io/<name>`) from the name and website and keeps a
+guess only when the board's own company name, or its job text, names the organisation (a bare shared first word is
+not enough). `discover` reads schema.org `JobPosting` data that careers pages publish for Google for Jobs, which
+covers sites with no job-board API (including Teamtailor-hosted pages). Both label what they find as Inferred or
+Verified accordingly.
 
 `npm run import -- --file path/to/register.csv` imports a local copy (the date is read from the file name, or
 pass `--published YYYY-MM-DD`). Re-importing a newer register records what was added, removed or changed.

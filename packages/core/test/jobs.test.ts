@@ -11,6 +11,8 @@ describe('classifyRole', () => {
     ['Full Stack Developer', 'software'],
     ['iOS Engineer', 'software'],
     ['QA Engineer', 'software'],
+    ['Automation Tester', 'software'],
+    ['Senior QA Analyst', 'software'],
     ['Staff Software Engineer, Data Platform', 'software'],
     ['Engineering Manager', 'software'],
     ['Senior Engineering Manager', 'software'],

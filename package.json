@@ -19,7 +19,9 @@
     "test": "vitest run",
     "dev": "npm run dev -w web",
     "scan": "npm run start -w scanner --",
-    "typecheck": "tsc -p ."
+    "typecheck": "tsc -p .",
+    "probe": "npm run probe -w resolver --",
+    "discover": "npm run discover -w scanner --"
   },
   "devDependencies": {
     "@types/node": "^26.6.3",
