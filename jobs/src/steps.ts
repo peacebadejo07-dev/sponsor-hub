@@ -108,6 +108,8 @@ export function buildSteps(sql: Sql): Step[] {
         return runCli('register', ['import'], b);
       }
     },
+    // Monthly: the step skips itself unless Companies House has published a snapshot we have not read yet.
+    { name: 'companieshouse', maxMinutes: 25, run: (b) => runCli('companieshouse', ['chbulk'], b) },
     { name: 'research', maxMinutes: 20, run: (b) => runCli('research', ['resolve', '--', '--limit', '150', '--tag', 'tech', '--concurrency', '6', '--budget-minutes', mins(b)], b) },
     { name: 'probe', maxMinutes: 15, run: (b) => runCli('probe', ['probe', '--', '--limit', '200', '--concurrency', '6', '--budget-minutes', mins(b)], b) },
     { name: 'discover', maxMinutes: 12, run: (b) => runCli('discover', ['discover', '--', '--limit', '80', '--concurrency', '4', '--budget-minutes', mins(b)], b) },

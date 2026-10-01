@@ -20,7 +20,7 @@ on:
         type: boolean
         default: false
       only:
-        description: 'Only these steps, comma separated (register, research, probe, discover, scan, maintenance, digest)'
+        description: 'Only these steps, comma separated (register, companieshouse, research, probe, discover, scan, maintenance, digest)'
         type: string
         default: ''
 

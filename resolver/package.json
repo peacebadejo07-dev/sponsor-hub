@@ -7,13 +7,15 @@
   "scripts": {
     "start": "tsx --env-file-if-exists=../.env src/cli.ts",
     "probe": "tsx --env-file-if-exists=../.env src/probe-cli.ts",
-    "reverify": "tsx --env-file-if-exists=../.env src/reverify-cli.ts"
+    "reverify": "tsx --env-file-if-exists=../.env src/reverify-cli.ts",
+    "chbulk": "tsx --env-file-if-exists=../.env src/chbulk-cli.ts"
   },
   "dependencies": {
     "@sponsored/core": "*",
     "cheerio": "^1.0.0",
     "postgres": "^3.4.5",
     "@sponsored/http": "*",
-    "@sponsored/db": "*"
+    "@sponsored/db": "*",
+    "csv-parse": "^5.6.0"
   }
 }

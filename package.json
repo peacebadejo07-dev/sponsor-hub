@@ -26,6 +26,7 @@
     "reverify": "npm run reverify -w resolver --",
     "daily": "npm run daily -w jobs --",
     "sectors": "npm run sectors -w jobs --",
+    "chbulk": "npm run chbulk -w resolver --",
     "deploy": "npm run build -w web && cd web && wrangler deploy"
   },
   "devDependencies": {

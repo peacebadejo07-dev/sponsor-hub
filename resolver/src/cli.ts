@@ -26,10 +26,10 @@ async function pickTargets(): Promise<Target[]> {
   return sql<Target[]>`
     select o.name_key, (array_agg(o.name order by o.id))[1] as name, (array_agg(o.town order by o.id))[1] as town,
            (array_agg(o.county order by o.id))[1] as county, count(*)::int as branches
-    from orgs o left join org_profiles p on p.name_key = o.name_key
+    from orgs o join orgs_enriched e on e.id = o.id left join org_profiles p on p.name_key = o.name_key
     where o.status = 'active'
-      and ${nameLike ? sql`o.name_key like ${'%' + nameLike.toLowerCase() + '%'}` : sql`${tag} = any(o.sector_tags)`}
-      and (p.name_key is null
+      and ${nameLike ? sql`o.name_key like ${'%' + nameLike.toLowerCase() + '%'}` : sql`${tag} = any(e.all_sector_tags)`}
+      and (p.name_key is null or p.resolve_status = 'pending'
            or (${retry} and p.resolve_status in ('not_found', 'error') and p.updated_at < now() - interval '30 days'))
     group by o.name_key
     order by count(*) desc, o.name_key
