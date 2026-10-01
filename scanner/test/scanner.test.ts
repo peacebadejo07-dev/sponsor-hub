@@ -8,6 +8,8 @@ import { mapSmartRecruiters } from '../src/adapters/smartrecruiters.ts';
 import { parseTeamtailorFeed } from '../src/adapters/teamtailor.ts';
 import { mapBambooHr } from '../src/adapters/bamboohr.ts';
 import { htmlToText } from '@sponsored/core';
+import { mapRecruitee, recruiteeSalary } from '../src/adapters/recruitee.ts';
+import { parsePersonioFeed } from '../src/adapters/personio.ts';
 import { screen, normalise } from '../src/normalise.ts';
 import type { RawJob } from '../src/types.ts';
 
@@ -379,5 +381,52 @@ describe('bamboohr (real BambooHR data)', () => {
     const o = fx('bamboohr-detail').result.jobOpening;
     expect(htmlToText(o.description).length).toBeGreaterThan(50);
     expect(o.datePosted).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe('recruitee (real bunq data)', () => {
+  const offers = fx('recruitee').offers.map(mapRecruitee);
+  it('maps id, title, location, apply link, date and plain-text description', () => {
+    expect(offers.length).toBe(14);
+    const j = offers.find((x: RawJob) => x.title === 'iOS Developer')!;
+    expect(j.applyUrl).toMatch(/^https:\/\/careers\.bunq\.com\/o\//);
+    expect(j.locations.join(' ')).toMatch(/Amsterdam/);
+    expect(j.countryCodes).toContain('NL');
+    expect(j.postedAt).toBeInstanceOf(Date);
+    expect(j.descriptionText).toBeTruthy();
+    expect(j.descriptionText).not.toMatch(/<(p|span|li)\b/);
+  });
+  it('takes work mode only from the flags it states', () => {
+    expect(mapRecruitee({ id: 1, title: 'x', remote: true }).workMode).toBe('remote');
+    expect(mapRecruitee({ id: 1, title: 'x', hybrid: true, on_site: true }).workMode).toBe('hybrid');
+    expect(mapRecruitee({ id: 1, title: 'x' }).workMode).toBeNull();
+  });
+  it('accepts salary only as a complete GBP/USD/EUR range with a period', () => {
+    expect(recruiteeSalary({ min: 50000, max: 60000, currency: 'gbp', period: 'year' })).toEqual({ min: 50000, max: 60000, currency: 'GBP', period: 'year' });
+    expect(recruiteeSalary({ min: null, max: null, currency: null, period: null })).toBeNull();
+    expect(recruiteeSalary({ min: 50000, max: 60000, currency: 'GBP', period: null })).toBeNull();
+  });
+});
+
+describe('personio (real Personio feed)', () => {
+  const xml = readFileSync(new URL('./fixtures/personio.xml', import.meta.url), 'utf8');
+  const jobs = parsePersonioFeed(xml, 'financialcom');
+  it('reads positions with description sections joined and entities decoded', () => {
+    expect(jobs.length).toBeGreaterThan(0);
+    const j = jobs[0];
+    expect(j.externalId).toBe('125198');
+    expect(j.applyUrl).toBe('https://financialcom.jobs.personio.com/job/125198');
+    expect(j.descriptionText).toContain('Deine Aufgaben');
+    expect(j.descriptionText).not.toMatch(/<(ul|li)>/);
+    expect(j.department).toContain('People & Organization');
+  });
+  it('takes the country from the office suffix and maps UK to GB', () => {
+    expect(jobs[0].countryCodes).toEqual(['DE']);
+    expect(jobs[0].locations[0]).toBe('MUC - München');
+    const uk = parsePersonioFeed('<workzag-jobs><position><id>1</id><name>Dev</name><office>London (UK)</office></position></workzag-jobs>', 's');
+    expect(uk[0].countryCodes).toEqual(['GB']);
+  });
+  it('an empty feed is no jobs', () => {
+    expect(parsePersonioFeed('<workzag-jobs></workzag-jobs>', 's')).toEqual([]);
   });
 });
