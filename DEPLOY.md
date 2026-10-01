@@ -55,6 +55,18 @@ cd web
 npx wrangler login                                   # once; approve in the browser
 ```
 
+**The Worker reaches Supabase through Cloudflare Hyperdrive.** Supabase's database certificate is signed by Supabase's own authority, which the
+Workers runtime does not trust, so a direct connection from a Worker fails ("Network connection lost"). Hyperdrive terminates TLS to the
+database itself. Create it once (use the **session pooler** URI, port 5432, as Hyperdrive pools connections itself) and put the id it prints in
+`web/wrangler.jsonc` under `hyperdrive`:
+
+```bash
+npx wrangler hyperdrive create sponsor-hub-db --connection-string='postgres://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres'
+```
+
+Scripts, tests and GitHub Actions connect to Supabase directly (Node does not verify that certificate unless `DATABASE_CA` is set), so only the
+Worker needs Hyperdrive. Free plan: 100,000 queries a day.
+
 `wrangler secret put` only works once the Worker exists, so the first deploy sets the secrets itself. Create `web/prod.secrets.env`
 (it is git-ignored) containing the values, one per line, `NAME=value`:
 

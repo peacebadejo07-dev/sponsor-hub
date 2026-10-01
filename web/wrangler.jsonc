@@ -10,5 +10,7 @@
   "vars": { "PUBLIC_BASE_URL": "https://sponsorhub.uk" },
   // Serve the site on the domain (Cloudflare creates the DNS record and certificate; the zone must be on this account).
   "routes": [{ "pattern": "sponsorhub.uk", "custom_domain": true }],
+  // Cloudflare Hyperdrive in front of Supabase (see DEPLOY.md): handles TLS to the database and pools connections.
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "6843bb69517b4c5d8273de3752ef065e" }],
   "observability": { "enabled": true }
 }
