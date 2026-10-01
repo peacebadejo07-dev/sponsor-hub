@@ -98,7 +98,9 @@ describe('detectAts', () => {
     ['https://jobs.ashbyhq.com/ramp', 'ashby', 'ramp'],
     ['https://apply.workable.com/acme-ltd/', 'workable', 'acme-ltd'],
     ['https://careers.smartrecruiters.com/Visa', 'smartrecruiters', 'Visa'],
-    ['https://acme.teamtailor.com/jobs', 'teamtailor', 'acme']
+    ['https://acme.teamtailor.com/jobs', 'teamtailor', 'acme'],
+    ['https://arcticwolf.wd1.myworkdayjobs.com/External', 'workday', 'arcticwolf.wd1/External'],
+    ['https://alfa.wd3.myworkdayjobs.com/en-US/Alfa/job/UK-London/x_R1', 'workday', 'alfa.wd3/Alfa']
   ])('%s', (h, ats, slug) => {
     expect(detectAts(h)).toMatchObject({ ats, slug });
   });

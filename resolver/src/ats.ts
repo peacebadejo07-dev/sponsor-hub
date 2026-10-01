@@ -34,8 +34,9 @@ const PATTERNS: { ats: AtsType; re: RegExp; board: (m: RegExpMatchArray) => stri
   { ats: 'bamboohr', re: /([a-z0-9-]+)\.bamboohr\.com\/(?:careers|jobs)/i, slug: (m) => m[1], board: (m) => `https://${m[1]}.bamboohr.com/careers` },
   {
     ats: 'workday',
-    re: /([a-z0-9-]+)\.wd\d+\.myworkdayjobs\.com\/(?:[a-z]{2}-[A-Z]{2}\/)?([A-Za-z0-9_-]+)/i,
-    slug: (m) => `${m[1]}/${m[2]}`,
+    re: /([a-z0-9-]+)\.(wd\d+)\.myworkdayjobs\.com\/(?:[a-z]{2}-[A-Z]{2}\/)?([A-Za-z0-9_-]+)/i,
+    // The host number (wd1, wd5 ...) is needed to call the API, so it is part of the slug: tenant.wdN/site
+    slug: (m) => `${m[1]}.${m[2].toLowerCase()}/${m[3]}`,
     board: (m) => m[0].startsWith('http') ? m[0] : `https://${m[0]}`
   }
 ];

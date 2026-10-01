@@ -106,6 +106,8 @@ export interface FetchOpts {
   maxBytes?: number;
   skipRobots?: boolean; // only for documented public APIs (Wikidata, ATS JSON feeds)
   accept?: string;
+  method?: 'GET' | 'POST';
+  body?: string; // JSON body for POST
 }
 
 /** Polite GET: private-IP guard, robots.txt, per-host throttle, redirect cap, size cap. Returns null on any failure. */
@@ -126,13 +128,16 @@ export async function fetchPage(url: string, opts: FetchOpts = {}, extraHeaders:
     try {
       res = await fetch(current, {
         redirect: 'manual',
-        headers: { 'user-agent': USER_AGENT, accept: opts.accept ?? 'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.5', ...(hop === 0 ? extraHeaders : {}) },
+        method: opts.method ?? 'GET',
+        body: opts.method === 'POST' ? opts.body : undefined,
+        headers: { ...(opts.method === 'POST' ? { 'content-type': 'application/json' } : {}), 'user-agent': USER_AGENT, accept: opts.accept ?? 'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.5', ...(hop === 0 ? extraHeaders : {}) },
         signal: AbortSignal.timeout(opts.timeoutMs ?? 7_000)
       });
     } catch {
       return null;
     }
     if (res.status >= 300 && res.status < 400 && res.headers.get('location')) {
+      if (opts.method === 'POST') return null; // never replay a POST across a redirect
       current = new URL(res.headers.get('location')!, current).toString();
       continue;
     }

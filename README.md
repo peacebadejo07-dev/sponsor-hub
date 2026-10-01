@@ -47,12 +47,13 @@ npm run scan -- --limit 50                    # scan boards not checked in the l
 npm run scan -- --org monzo --force --dry-run
 ```
 
-The scanner reads the public job-board APIs of **Greenhouse, Lever, Ashby, Workable and SmartRecruiters**. It keeps
+The scanner reads the public job-board APIs of **Greenhouse, Lever, Ashby, Workable, SmartRecruiters and Workday**. It keeps
 only UK jobs in tech and adjacent roles, extracts role family, level, work mode, employment type, salary, skills and
 the posting's own sponsorship wording (quoted, never inferred from the register), and tracks each job's life: a job
 missing from two successful scans is marked expired, and a failed fetch never expires anything. Only a short excerpt
-of each description is stored, to stay inside free database limits. Some Ashby customers do not enable the public
-posting API; those boards are recorded as failed and retried every 3 days.
+of each description is stored, to stay inside free database limits. Some employers do not allow public API access (some Ashby
+boards, some Workday tenants return HTTP 422); those boards are recorded as failed and retried every 3 days. Workday
+boards are listed with a UK location filter, so a global employer costs a handful of requests.
 
 `npm run import -- --file path/to/register.csv` imports a local copy (the date is read from the file name, or
 pass `--published YYYY-MM-DD`). Re-importing a newer register records what was added, removed or changed.

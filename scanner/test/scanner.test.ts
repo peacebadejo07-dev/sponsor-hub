@@ -159,3 +159,56 @@ describe('normalise: honesty about unknowns', () => {
     expect(run({ ...base, applyUrl: null })).toEqual({ skip: 'no_apply_url' });
   });
 });
+
+import { parseSlug, ukLocationFacet, parsePostedOn, mapWorkday } from '../src/adapters/workday.ts';
+
+describe('workday (real Arctic Wolf data)', () => {
+  const list = fx('workday-list');
+  it('parses slugs with and without the host number', () => {
+    expect(parseSlug('arcticwolf.wd1/External')).toEqual({ tenant: 'arcticwolf', wd: 'wd1', site: 'External' });
+    expect(parseSlug('alfa/Alfa')).toEqual({ tenant: 'alfa', wd: null, site: 'Alfa' });
+    expect(parseSlug('broken')).toBeNull();
+  });
+  it('finds the UK locations in the real facet tree and ignores the rest', () => {
+    const f = ukLocationFacet(list.facets)!;
+    expect(f.param).toBe('locations');
+    expect(f.any).toBe(true);
+    expect(f.ids.length).toBeGreaterThan(0);
+    const names = list.facets.flatMap((x: any) => x.values ?? []).flatMap((g: any) => g.values ?? []).filter((v: any) => f.ids.includes(v.id)).map((v: any) => v.descriptor);
+    expect(names.some((n: string) => /GBR|United Kingdom|UK/i.test(n))).toBe(true);
+    expect(names.some((n: string) => /Bengaluru|Cork|Frankfurt|USA|Canada/i.test(n))).toBe(false);
+  });
+  it('reports a board with no UK location, and one with no location facet', () => {
+    const noUk = [{ facetParameter: 'locations', values: [{ descriptor: 'Cork, IRL', id: 'a' }, { descriptor: 'Austin, TX, USA', id: 'b' }] }];
+    expect(ukLocationFacet(noUk as any)).toEqual({ param: 'locations', ids: [], any: false });
+    expect(ukLocationFacet([{ facetParameter: 'timeType', values: [{ descriptor: 'Full time', id: 'x' }] }] as any)).toBeNull();
+  });
+  it('turns relative posting dates into approximate dates', () => {
+    const now = new Date('2026-10-10T12:00:00Z');
+    expect(parsePostedOn('Posted Today', now)?.toISOString().slice(0, 10)).toBe('2026-10-10');
+    expect(parsePostedOn('Posted Yesterday', now)?.toISOString().slice(0, 10)).toBe('2026-10-09');
+    expect(parsePostedOn('Posted 3 Days Ago', now)?.toISOString().slice(0, 10)).toBe('2026-10-07');
+    expect(parsePostedOn('Posted 30+ Days Ago', now)?.toISOString().slice(0, 10)).toBe('2026-09-10');
+    expect(parsePostedOn('whenever', now)).toBeNull();
+  });
+  it('maps a posting, using the requisition id and treating UK-filtered jobs as UK even when it says "2 Locations"', () => {
+    const j = mapWorkday({ ...list.jobPostings[0], locationsText: '2 Locations' }, 'https://x.wd1.myworkdayjobs.com/wday/cxs/x/External', 'https://x.wd1.myworkdayjobs.com/External', true);
+    expect(j.externalId).toBe(list.jobPostings[0].bulletFields[0]);
+    expect(j.applyUrl).toBe(`https://x.wd1.myworkdayjobs.com/External${list.jobPostings[0].externalPath}`);
+    expect(j.countryCodes).toEqual(['GB']);
+    expect(j.descriptionText).toBeNull();
+    expect(JSON.parse(j.ref!).path).toBe(list.jobPostings[0].externalPath);
+    const s = screen({ ...j, title: 'Senior Software Engineer' });
+    expect('skip' in s).toBe(false);
+  });
+  it('without a location filter, a job is not assumed to be UK', () => {
+    const j = mapWorkday(list.jobPostings[0], 'b', 's', false);
+    expect(j.countryCodes).toEqual([]);
+  });
+  it('the real detail response carries description, location and a job URL', () => {
+    const info = fx('workday-detail').jobPostingInfo;
+    expect(info.jobDescription.length).toBeGreaterThan(100);
+    expect(info.externalUrl).toMatch(/^https:\/\/arcticwolf\.wd1\.myworkdayjobs\.com\//);
+    expect(info.timeType).toBe('Full time');
+  });
+});

@@ -36,6 +36,10 @@ describe('classifyRole', () => {
     ['Content Designer', 'design'],
     ['Product Manager, Growth', 'product'],
     ['Head of Product', 'product'],
+    ['Director of Product', 'product'],
+    ['VP Product', 'product'],
+    ['Manager, Incident Response', 'cybersecurity'],
+    ['End User Services Administrator', 'it_support'],
     ['Technical Product Manager', 'product'],
     ['Solutions Engineer', 'adjacent'],
     ['Sales Engineer', 'adjacent'],
@@ -49,7 +53,7 @@ describe('classifyRole', () => {
   });
 
   it('skips non-tech roles', () => {
-    for (const t of ['Account Executive', 'Marketing Manager', 'Recruiter', 'Mechanical Engineer', 'Civil Engineer', 'Customer Support Specialist', 'Financial Controller', 'Product Marketing Manager', 'Security Guard', 'Credit Risk Manager', 'Senior Legal Counsel', 'Talent Strategist', 'Revenue Accounting Manager', 'Fraud Investigator']) {
+    for (const t of ['Account Executive', 'Marketing Manager', 'Recruiter', 'Mechanical Engineer', 'Civil Engineer', 'Customer Support Specialist', 'Financial Controller', 'Product Marketing Manager', 'Security Guard', 'Director of Product Marketing', 'Credit Risk Manager', 'Senior Legal Counsel', 'Talent Strategist', 'Revenue Accounting Manager', 'Fraud Investigator']) {
       expect(classifyRole(t)).toBeNull();
     }
   });

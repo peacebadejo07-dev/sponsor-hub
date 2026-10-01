@@ -42,6 +42,11 @@ async function scanOne(t: Target) {
   const adapter = ADAPTERS[t.ats_type as Source];
   const res = await adapter.fetchBoard(t.ats_slug);
   totals.boards++;
+  if (res.ok && res.slug && res.slug !== t.ats_slug && !dryRun) {
+    // The adapter found the precise board address (e.g. Workday host number); remember it.
+    await sql`update org_profiles set ats_slug = ${res.slug} where name_key = ${t.name_key}`;
+    t.ats_slug = res.slug;
+  }
   if (!res.ok) {
     totals.failed++;
     console.log(`  [failed] ${t.name_key} ${t.ats_type}:${t.ats_slug} HTTP ${res.status}`);
@@ -61,7 +66,11 @@ async function scanOne(t: Target) {
     if (job.descriptionText == null && adapter.enrich && enriched < ENRICH_CAP) {
       enriched++;
       const e = await adapter.enrich(t.ats_slug, job);
-      if (e) job = { ...job, descriptionText: e.descriptionText, applyUrl: e.applyUrl ?? job.applyUrl };
+      if (e) {
+        // Only take values the detail call actually provided.
+        const extra = Object.fromEntries(Object.entries(e).filter(([, v]) => v != null && !(Array.isArray(v) && v.length === 0)));
+        job = { ...job, ...extra };
+      }
     }
     const n = normalise(job, s.family);
     if ('skip' in n) continue;
