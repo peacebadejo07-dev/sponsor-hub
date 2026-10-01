@@ -1,5 +1,4 @@
 import postgres, { type Sql } from 'postgres';
-import { pipeline } from 'node:stream/promises';
 
 /**
  * Copy researched data (profiles, live jobs, scan log, Companies House import log) from the local development database to
@@ -14,6 +13,7 @@ import { pipeline } from 'node:stream/promises';
  */
 
 const LOCAL = 'postgres://postgres:postgres@localhost:54329/sponsored';
+const BATCH = 1000;
 const TABLES = ['org_profiles', 'opportunities', 'org_scans', 'ch_bulk_imports'] as const;
 
 const isLocal = (u: string) => /@(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/.test(u);
@@ -39,11 +39,19 @@ try {
   if (orgs === 0) throw new Error('The target has no organisations. Run `npm run db:migrate` and `npm run import` against it first.');
 
   for (const t of TABLES) {
+    // Plain batched inserts (rows travel as JSON and are typed by the target table), because COPY streams hang through
+    // Supabase's transaction pooler. Each table is replaced atomically.
     await to.begin(async (tx) => {
       await tx`delete from ${tx(t)}`;
-      const readable = await from`copy ${from(t)} to stdout`.readable();
-      const writable = await tx`copy ${tx(t)} from stdin`.writable();
-      await pipeline(readable, writable);
+      const [{ n }] = await from`select count(*)::int as n from ${from(t)}`;
+      for (let offset = 0; offset < n; offset += BATCH) {
+        const [{ rows }] = await from`
+          select coalesce(jsonb_agg(to_jsonb(x)), '[]'::jsonb) as rows
+          from (select * from ${from(t)} order by ctid offset ${offset} limit ${BATCH}) x`;
+        await tx`insert into ${tx(t)} select * from jsonb_populate_recordset(null::${tx(t)}, ${tx.json(rows)})`;
+        process.stdout.write(`\r${t}: ${Math.min(offset + BATCH, n)} / ${n}`);
+      }
+      process.stdout.write('\n');
     });
     const [{ n }] = await to`select count(*)::int as n from ${to(t)}`;
     console.log(`${t}: ${n} rows`);
