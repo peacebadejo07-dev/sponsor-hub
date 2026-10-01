@@ -11,7 +11,7 @@
   const tags = $derived(o.all_sector_tags.filter((t) => t !== 'tech' || o.all_sector_tags.length === 1));
   const ATS_NAMES: Record<string, string> = {
     greenhouse: 'Greenhouse', lever: 'Lever', ashby: 'Ashby', workable: 'Workable', smartrecruiters: 'SmartRecruiters',
-    workday: 'Workday', jsonld: 'Careers page with structured job data'
+    workday: 'Workday', teamtailor: 'Teamtailor', bamboohr: 'BambooHR', jsonld: 'Careers page with structured job data'
   };
   const atsName = (a: string | null) => (a ? (ATS_NAMES[a] ?? a) : null);
 </script>

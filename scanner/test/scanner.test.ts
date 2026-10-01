@@ -5,6 +5,9 @@ import { mapLever } from '../src/adapters/lever.ts';
 import { mapAshby, ashbySalary } from '../src/adapters/ashby.ts';
 import { mapWorkable } from '../src/adapters/workable.ts';
 import { mapSmartRecruiters } from '../src/adapters/smartrecruiters.ts';
+import { parseTeamtailorFeed } from '../src/adapters/teamtailor.ts';
+import { mapBambooHr } from '../src/adapters/bamboohr.ts';
+import { htmlToText } from '@sponsored/core';
 import { screen, normalise } from '../src/normalise.ts';
 import type { RawJob } from '../src/types.ts';
 
@@ -329,5 +332,52 @@ describe('untrusted URLs never become links', () => {
   it('a JobPosting whose url is javascript: cannot get through', () => {
     const j = mapJobPosting({ '@type': 'JobPosting', title: 'Data Engineer', description: 'x', url: 'javascript:alert(document.cookie)', jobLocation: { address: { addressCountry: 'GB' } } }, 'https://acme.test/careers/1')!;
     expect(run(j)).toEqual({ skip: 'no_apply_url' });
+  });
+});
+
+describe('teamtailor (real Teamtailor RSS feed)', () => {
+  const jobs = parseTeamtailorFeed(readFileSync(new URL('./fixtures/teamtailor.rss', import.meta.url), 'utf8'));
+  it('reads every item with id, title, link, date and plain-text description', () => {
+    expect(jobs.length).toBe(16);
+    for (const j of jobs) {
+      expect(j.externalId).toBeTruthy();
+      expect(j.title).toBeTruthy();
+      expect(j.applyUrl).toMatch(/^https:\/\/career\.teamtailor\.com\/jobs\//);
+      expect(j.postedAt).toBeInstanceOf(Date);
+      expect(j.descriptionText).not.toMatch(/<(p|div|li|strong)\b|&lt;/);
+    }
+  });
+  it('reads locations, countries and work mode; "none" means not stated', () => {
+    const uk = jobs.find((j) => j.countryCodes.includes('GB'))!;
+    expect(uk.locations[0]).toMatch(/United Kingdom/);
+    expect(uk.workMode).toBe('hybrid');
+    expect(jobs.some((j) => j.workMode === null)).toBe(true);
+    expect(jobs.every((j) => j.workMode !== ('none' as any))).toBe(true);
+  });
+  it('survives an empty or malformed feed', () => {
+    expect(parseTeamtailorFeed('<rss><channel></channel></rss>')).toEqual([]);
+    expect(parseTeamtailorFeed('not xml at all')).toEqual([]);
+  });
+});
+
+describe('bamboohr (real BambooHR data)', () => {
+  const list = fx('bamboohr-list').result.map((j: any) => mapBambooHr(j, 'jadeworld'));
+  it('maps the list response', () => {
+    expect(list.length).toBe(3);
+    const j = list.find((x: RawJob) => x.title.startsWith('Full Stack'))!;
+    expect(j.externalId).toBe('379');
+    expect(j.applyUrl).toBe('https://jadeworld.bamboohr.com/careers/379');
+    expect(j.workMode).toBe('hybrid');
+    expect(j.locations[0]).toMatch(/Christchurch/);
+    expect(j.descriptionText).toBeNull();
+  });
+  it('does not guess a country it was not told', () => {
+    expect(list[0].countryCodes).toEqual([]);
+    expect(mapBambooHr({ id: 1, jobOpeningName: 'X', atsLocation: { country: 'United Kingdom', city: 'Leeds' } }, 's').countryCodes).toEqual(['GB']);
+  });
+  it('detail response carries a description and date', () => {
+    const o = fx('bamboohr-detail').result.jobOpening;
+    expect(htmlToText(o.description).length).toBeGreaterThan(50);
+    expect(o.datePosted).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });

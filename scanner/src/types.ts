@@ -1,6 +1,6 @@
 import type { Salary } from '@sponsored/core';
 
-export type Source = 'greenhouse' | 'lever' | 'ashby' | 'workable' | 'smartrecruiters' | 'workday' | 'jsonld';
+export type Source = 'greenhouse' | 'lever' | 'ashby' | 'workable' | 'smartrecruiters' | 'workday' | 'teamtailor' | 'bamboohr' | 'jsonld';
 export type RawWorkMode = 'remote' | 'hybrid' | 'onsite';
 
 /** A job as a board reports it, before our normalisation. Salary here is only ever STRUCTURED data from the API. */

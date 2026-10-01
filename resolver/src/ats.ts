@@ -10,7 +10,7 @@ export interface AtsHit {
   boardUrl: string;
 }
 
-const RESERVED = new Set(['embed', 'jobs', 'careers', 'api', 'v1', 'j', 'widget', 'www', 'static', 'assets', 'job', 'apply', 'en', 'en-us']);
+const RESERVED = new Set(['embed', 'jobs', 'careers', 'api', 'v1', 'j', 'widget', 'www', 'static', 'assets', 'job', 'apply', 'en', 'en-us', 'app', 'career', 'support', 'help', 'company', 'cdn', 'login']);
 
 const PATTERNS: { ats: AtsType; re: RegExp; board: (m: RegExpMatchArray) => string; slug: (m: RegExpMatchArray) => string }[] = [
   {

@@ -306,3 +306,11 @@ describe('board probing: job text must name the organisation (Lever / Ashby)', (
     expect(textMentionsOrg(t, { name: 'Worldline IT Services UK Limited' })).toBe(false);
   });
 });
+
+describe('detectAts platform hosts', () => {
+  it('does not treat the vendor\'s own subdomains as an employer board', () => {
+    expect(detectAts('https://app.teamtailor.com/login')).toBeNull();
+    expect(detectAts('https://career.teamtailor.com/jobs')).toBeNull();
+    expect(detectAts('https://acme.teamtailor.com/jobs')).toMatchObject({ ats: 'teamtailor', slug: 'acme' });
+  });
+});
