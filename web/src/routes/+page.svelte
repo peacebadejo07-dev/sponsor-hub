@@ -4,7 +4,7 @@
   let { data } = $props();
 
   const f = $derived(data.filters);
-  const activeCount = $derived(f.sectors.length + f.routes.length + f.ratings.length + (f.town ? 1 : 0) + (f.q ? 1 : 0));
+  const activeCount = $derived(f.sectors.length + f.routes.length + f.ratings.length + (f.hasCareers ? 1 : 0) + (f.town ? 1 : 0) + (f.q ? 1 : 0));
 
   function pageHref(p: number) {
     const u = new URLSearchParams();
@@ -13,6 +13,7 @@
     f.sectors.forEach((s) => u.append('sector', s));
     f.routes.forEach((s) => u.append('route', s));
     f.ratings.forEach((s) => u.append('rating', s));
+    if (f.hasCareers) u.set('careers', '1');
     if (p > 1) u.set('page', String(p));
     const qs = u.toString();
     return qs ? `/?${qs}` : '/';
@@ -54,6 +55,15 @@
           {#each data.towns as t (t.value)}<option value={t.value}>{fmt(t.count)}</option>{/each}
         </datalist>
       </label>
+
+      <fieldset>
+        <legend>Website <span class="badge inferred">Inferred</span></legend>
+        <p class="hint">Websites are found automatically for a growing shortlist, starting with tech organisations.</p>
+        <label class="check">
+          <input type="checkbox" name="careers" value="1" checked={f.hasCareers} />
+          <span>Has a careers page</span>
+        </label>
+      </fieldset>
 
       <fieldset>
         <legend>Sector <span class="badge inferred">Inferred</span></legend>
@@ -106,16 +116,26 @@
     {:else}
       <ul class="list">
         {#each data.orgs as o (o.id)}
+          {@const tags = o.all_sector_tags.filter((t) => t !== 'tech' || o.all_sector_tags.length === 1)}
           <li class="card">
             <div class="row1">
-              <h2>{o.name.trim()}</h2>
+              <h2><a href={`/org/${o.id}`}>{o.name.trim()}</a></h2>
               <span class="rating" title={RATING_HELP[o.rating] ?? ''}>{RATING_LABELS[o.rating] ?? o.rating}</span>
             </div>
             <p class="loc">{[o.town, o.county].filter(Boolean).join(', ') || 'Location not listed'}</p>
             <p class="routes">{o.routes.join(' · ')}</p>
-            {#if o.sector_tags.length}
+            {#if o.website || o.careers_url}
+              <p class="links">
+                {#if o.website}<a href={o.website} rel="noopener nofollow" target="_blank">{o.website.replace(/^https?:\/\/(www\.)?/, '')}</a>{/if}
+                {#if o.careers_url}<a class="careers" href={o.careers_url} rel="noopener nofollow" target="_blank">Careers page ↗</a>{/if}
+                <span class="badge inferred" title="Found automatically; the match may be wrong">Inferred</span>
+              </p>
+            {:else if o.resolve_status === 'candidate'}
+              <p class="links muted">Possible website found but not verified</p>
+            {/if}
+            {#if tags.length}
               <p class="tags">
-                {#each o.sector_tags.filter((t) => t !== 'tech' || o.sector_tags.length === 1) as t (t)}
+                {#each tags as t (t)}
                   <span class="tag" title="Inferred from the organisation name">{data.sectorLabels[t as keyof typeof data.sectorLabels]}</span>
                 {/each}
                 <span class="badge inferred">Inferred</span>
@@ -170,6 +190,12 @@
   .rating { font-size: 12px; font-weight: 600; color: var(--verified); background: var(--accent-soft); padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
   .loc { margin: 2px 0 0; color: var(--muted); }
   .routes { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
+  h2 a { text-decoration: none; }
+  h2 a:hover { text-decoration: underline; }
+  .links { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 13px; }
+  .links a { color: var(--accent); }
+  .links .careers { font-weight: 600; }
+  .links.muted { color: var(--muted); }
   .tags { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .tag { font-size: 12px; background: var(--bg); border: 1px solid var(--line); padding: 1px 8px; border-radius: 99px; }
   .empty { background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); padding: 28px; text-align: center; color: var(--muted); }

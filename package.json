@@ -7,12 +7,14 @@
   "workspaces": [
     "packages/*",
     "importer",
+    "resolver",
     "web"
   ],
   "scripts": {
     "db:start": "tsx scripts/dev-db.ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "import": "npm run start -w importer --",
+    "resolve": "npm run start -w resolver --",
     "test": "vitest run",
     "dev": "npm run dev -w web"
   },

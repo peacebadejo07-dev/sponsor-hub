@@ -69,6 +69,7 @@ Every displayed field carries provenance: **Verified** (read directly from the s
 - Company enrichment from free sources only: Companies House (size hints, filing status, incorporation date), Wikidata (industry, size where present), register fields (first seen, sponsor health). Funding only where a free source has it; otherwise Unconfirmed.
 - Profile page: sector, location, careers link, sponsorship routes/rating, enrichment, provenance badges.
 - Exit: profiles for first shortlist (~1–2k orgs) with verified websites.
+- **Status: built and tested live (not deployed).** Measured on 60 small tech organisations: 26 resolved, 8 low-confidence candidates, 26 not found; careers page found for 12 of the 26 resolved; ATS detected on well-known employers (Monzo: Greenhouse, Darktrace: Workday) but rarely on small ones. ~2.3 s per organisation, so the 5.4k tech-tagged names take ~3.5 h. Precision was tightened after a first run produced ~10% wrong websites (short or generic brand words). Companies House enrichment is implemented and unit-tested but untested live (needs a free API key). Candidates are never shown as facts. Known gaps: JavaScript-rendered careers links, bot-protected sites, and name-based sector tags that are wrong in places (e.g. "1st Cloud Accountants" tagged Cloud).
 
 ### M3: Opportunity scanner (weeks 3–4)
 - Adapter interface: `detect(org) → bool`, `fetch(org) → [Opportunity]`.

@@ -1,4 +1,4 @@
-const SMALL_WORDS = new Set(['upon', 'on', 'in', 'under', 'the', 'of', 'le', 'de', 'cum', 'with', 'by']);
+const SMALL_WORDS = new Set(['upon', 'on', 'in', 'under', 'the', 'of', 'le', 'de', 'cum', 'with', 'by', 'and']);
 
 export function clean(s: string | undefined | null): string {
   return (s ?? '').replace(/\s+/g, ' ').trim();

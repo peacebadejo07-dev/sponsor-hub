@@ -18,6 +18,7 @@ describe('normalisation', () => {
   it('title-cases towns', () => {
     expect(titleCase('  NEWCASTLE upon TYNE ')).toBe('Newcastle upon Tyne');
     expect(titleCase('stoke-on-trent')).toBe('Stoke-On-Trent');
+    expect(titleCase('TYNE AND WEAR')).toBe('Tyne and Wear');
   });
   it('builds a whitespace/case/quote-insensitive key', () => {
     expect(key('  "K" Line   Energy ')).toBe(key('k line energy'));

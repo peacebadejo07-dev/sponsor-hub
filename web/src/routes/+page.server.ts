@@ -14,6 +14,7 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
     town: one(url, 'town').slice(0, 60),
     routes: all(url, 'route').slice(0, 20),
     ratings: all(url, 'rating').slice(0, 10),
+    hasCareers: url.searchParams.get('careers') === '1',
     page: Math.max(1, Math.min(4000, Number(url.searchParams.get('page')) || 1))
   };
   setHeaders({ 'cache-control': 'public, max-age=60, s-maxage=300' });
