@@ -45,14 +45,30 @@ GitHub starts scheduled jobs late at busy times and **pauses scheduled workflows
 ## 4. The website (Cloudflare)
 
 ```bash
+npm run build -w web
 cd web
-npm run build
-npx wrangler deploy
+npx wrangler login                                   # once; approve in the browser
 ```
 
-Set these on the Worker (**Settings, Variables and Secrets**, or `npx wrangler secret put NAME`):
-`DATABASE_URL` (secret), `AUTH_SECRET` (secret, the same value as in GitHub), `PUBLIC_BASE_URL`, `RESEND_API_KEY` (secret), `AUTH_FROM`, `CONTACT_EMAIL`.
-Then add your domain under **Domains** and let Cloudflare manage its DNS.
+`wrangler secret put` only works once the Worker exists, so the first deploy sets the secrets itself. Create `web/prod.secrets.env`
+(it is git-ignored) containing the values, one per line, `NAME=value`:
+
+```
+DATABASE_URL=...        # the Supabase pooler URI
+AUTH_SECRET=...         # openssl rand -base64 48 (the same value goes into GitHub)
+RESEND_API_KEY=...
+AUTH_FROM=Sponsor Hub <hello@sponsorhub.uk>
+CONTACT_EMAIL=...
+```
+
+```bash
+npx wrangler deploy --secrets-file prod.secrets.env
+```
+
+Later changes to one secret: `npx wrangler secret put NAME`. Non-secret settings (`PUBLIC_BASE_URL`, the `sponsorhub.uk` route) live in
+`web/wrangler.jsonc`. Deploy only once the database is loaded, or every page will error.
+
+The domain is attached by the route in `wrangler.jsonc` (the zone must already be on your Cloudflare account).
 
 `npm run build` (in `web`) also wraps the adapter's worker with `edge/entry.js` (`scripts/wrap-worker.mjs`). That wrapper stops the adapter's
 edge cache from serving a logged-out copy of a page to a signed-in visitor, and the build **fails** if it is not in place. Do not point

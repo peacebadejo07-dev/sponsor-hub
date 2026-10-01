@@ -6,5 +6,9 @@
   // nodejs_compat provides node:crypto (hashing, HMAC, random tokens) and the socket support the Postgres driver needs.
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "binding": "ASSETS", "directory": ".svelte-kit/cloudflare" },
+  // Non-secret settings. Secrets (DATABASE_URL, AUTH_SECRET, RESEND_API_KEY) are set with `wrangler secret put`, never here.
+  "vars": { "PUBLIC_BASE_URL": "https://sponsorhub.uk" },
+  // Serve the site on the domain (Cloudflare creates the DNS record and certificate; the zone must be on this account).
+  "routes": [{ "pattern": "sponsorhub.uk", "custom_domain": true }],
   "observability": { "enabled": true }
 }

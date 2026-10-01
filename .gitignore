@@ -7,3 +7,6 @@ data/
 build
 .DS_Store
 .claude/
+
+# Worker secrets file for `wrangler deploy --secrets-file` (never commit)
+*.secrets.env
