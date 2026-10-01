@@ -1,5 +1,6 @@
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
 import { consoleMailer, resendMailer, safeNext, type AuthConfig } from '@sponsored/accounts';
 
 export { safeNext };
@@ -14,7 +15,8 @@ export const SESSION_COOKIE = 'sh_session';
 export function authConfig(origin: string): AuthConfig {
   const secret = env.AUTH_SECRET;
   if (!dev && (!secret || secret.length < 32)) throw new Error('AUTH_SECRET (32+ characters) must be set in production');
-  const baseUrl = env.PUBLIC_BASE_URL ?? (dev ? origin : '');
+  // SvelteKit keeps every PUBLIC_* setting out of the private env, so this one is read from the public env.
+  const baseUrl = publicEnv.PUBLIC_BASE_URL ?? (dev ? origin : '');
   if (!baseUrl) throw new Error('PUBLIC_BASE_URL must be set in production');
   let mailer = consoleMailer;
   if (env.RESEND_API_KEY && env.AUTH_FROM) mailer = resendMailer(env.RESEND_API_KEY, env.AUTH_FROM);
