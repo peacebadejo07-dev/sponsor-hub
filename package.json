@@ -1,0 +1,27 @@
+{
+  "name": "sponsored-jobs",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "importer",
+    "web"
+  ],
+  "scripts": {
+    "db:start": "tsx scripts/dev-db.ts",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "import": "npm run start -w importer --",
+    "test": "vitest run",
+    "dev": "npm run dev -w web"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "embedded-postgres": "^18.4.0-beta.17",
+    "postgres": "^3.4.9",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}
