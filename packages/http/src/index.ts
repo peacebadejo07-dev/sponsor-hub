@@ -7,7 +7,7 @@ interface RobotsRules {
 }
 const robotsParser = robotsModule as unknown as (url: string, txt: string) => RobotsRules;
 
-export const USER_AGENT = `SponsorHubBot/0.1 (+${process.env.BOT_CONTACT ?? 'https://github.com/OWNER/sponsor-hub'}; respects robots.txt)`;
+export const USER_AGENT = `SponsorHubBot/0.1 (+${process.env.BOT_CONTACT ?? 'https://sponsorhub.uk/bot'}; respects robots.txt)`;
 
 const MIN_INTERVAL_MS = Number(process.env.HOST_INTERVAL_MS ?? 1000);
 /** Documented public APIs tolerate a faster rate than arbitrary company sites. */

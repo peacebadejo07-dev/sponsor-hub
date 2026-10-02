@@ -97,7 +97,7 @@ wrangler's `main` at your own file: the adapter deletes and rewrites whatever `m
       provider's CA certificate (Supabase publishes one) in `DATABASE_CA` (GitHub secret and Worker secret) to enforce it.
 - [ ] **Rate-limit the sign-in form.** Add a Cloudflare rate-limiting rule for `POST /login` (and consider Turnstile on the form).
 - [ ] **Set `CONTACT_EMAIL`** on the Worker. `/privacy` and `/bot` show it; until it is set they say "Contact details are not configured".
-- [ ] **Replace the repository placeholder** in `BOT_CONTACT` (GitHub variable) and `.env.example` (`YOUR-ACCOUNT/YOUR-REPO`, formerly `OWNER`), and turn on private vulnerability reporting (Settings, Code security) so [SECURITY.md](SECURITY.md) works.
+- [ ] Set the GitHub variable `BOT_CONTACT` to `https://sponsorhub.uk/bot` (the crawler puts it in its User-Agent), and turn on private vulnerability reporting (Settings, Code security) so [SECURITY.md](SECURITY.md) works.
 - [ ] **Verify the Resend domain** and send yourself a sign-in link end to end.
 - [ ] **No "cache everything" rule** in Cloudflare for this site: signed-in pages must never be cached.
 - [ ] Confirm `/status` shows a successful scan after the first scheduled run.
