@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+
+const FIXTURE_ORG = 'zz accounts test org';
 import postgres from 'postgres';
 import {
   requestLogin, verifyLogin, getSession, endSession, deleteAccount, normaliseEmail, sha256, resendMailer,
@@ -273,7 +275,13 @@ describe.skipIf(!up)('sign-in, sessions and data (needs the dev database)', () =
     };
     const alice = await signIn('alice');
     const bob = await signIn('bob');
-    const [org] = await sql`select id from orgs limit 1`;
+    // Own fixtures, so the test does not depend on the database already holding a register or any jobs (CI starts empty).
+    const [imp] = await sql`insert into register_imports (source, published_on, row_count, org_count) values ('accounts-test', '2031-02-02', 0, 0) returning id`;
+    const [org] = await sql`insert into orgs (name_key, name, rating, first_import_id, last_import_id) values (${FIXTURE_ORG}, 'ZZ Accounts Test Org', 'A', ${imp.id}, ${imp.id}) returning id`;
+    await sql`insert into org_profiles (name_key, resolve_status) values (${FIXTURE_ORG}, 'resolved')`;
+    await sql`insert into opportunities (name_key, source, external_id, title, role_family, location_raw, apply_url, content_hash)
+              values (${FIXTURE_ORG}, 'test', 'accounts-1', 'Test Engineer', 'software', 'London', 'https://example.com/job', 'h1'),
+                     (${FIXTURE_ORG}, 'test', 'accounts-2', 'Test Analyst', 'data', 'Leeds', 'https://example.com/job2', 'h2')`;
     await saveProfile(sql, alice, sanitiseProfile({ roles: ['data'], locations: ['Leeds'], skills: ['python'], needsSponsorship: 'yes', minSalary: 50000, hideRefusals: true }));
     expect((await getProfile(sql, alice)).profile).toMatchObject({ roles: ['data'], locations: ['Leeds'], needsSponsorship: 'yes', minSalary: 50000 });
     expect((await getProfile(sql, bob)).exists).toBe(false);
@@ -284,8 +292,9 @@ describe.skipIf(!up)('sign-in, sessions and data (needs the dev database)', () =
     await setSavedOrg(sql, alice, 999999999, true); // an id that does not exist creates nothing
     expect((await sql`select count(*)::int as n from saved_orgs where user_id = ${alice}`)[0].n).toBe(1);
 
-    const opps = await sql`select id from opportunities limit 2`;
-    if (opps.length) {
+    const opps = await sql`select id from opportunities where name_key = ${FIXTURE_ORG} order by id`;
+    expect(opps.length).toBe(2);
+    {
       const id = Number(opps[0].id);
       await setMark(sql, alice, id, 'saved');
       await setMark(sql, alice, id, 'applied'); // changes the mark, still one row
@@ -436,5 +445,10 @@ describe.skipIf(!up)('weekly digest (needs the dev database)', () => {
 // One shared connection for the whole file, closed once everything has run.
 afterAll(async () => {
   await cleanup().catch(() => {});
+  await sql`delete from opportunity_marks where opportunity_id in (select id from opportunities where name_key = ${FIXTURE_ORG})`.catch(() => {});
+  await sql`delete from opportunities where name_key = ${FIXTURE_ORG}`.catch(() => {});
+  await sql`delete from org_profiles where name_key = ${FIXTURE_ORG}`.catch(() => {});
+  await sql`delete from orgs where name_key = ${FIXTURE_ORG}`.catch(() => {});
+  await sql`delete from register_imports where source = 'accounts-test'`.catch(() => {});
   await sql.end();
 });
