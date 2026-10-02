@@ -2,10 +2,11 @@ import type { Handle } from '@sveltejs/kit';
 import { getSession } from '@sponsored/accounts';
 import { sql, withRequestDb } from '$lib/server/db';
 import { SESSION_COOKIE } from '$lib/server/auth';
+import { canonicalRedirect } from '$lib/canonical';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-export const handle: Handle = ({ event, resolve }) => withRequestDb(() => handleRequest(event, resolve), event.platform?.context?.waitUntil?.bind(event.platform.context), event.platform?.env?.HYPERDRIVE?.connectionString);
+export const handle: Handle = ({ event, resolve }) => canonicalRedirect(event.url, event.request.method) ?? withRequestDb(() => handleRequest(event, resolve), event.platform?.context?.waitUntil?.bind(event.platform.context), event.platform?.env?.HYPERDRIVE?.connectionString);
 
 const handleRequest = async (event: Parameters<Handle>[0]['event'], resolve: Parameters<Handle>[0]['resolve']) => {
   // CSRF: every state-changing request must come from this site. Browsers always send an Origin header on such requests.
