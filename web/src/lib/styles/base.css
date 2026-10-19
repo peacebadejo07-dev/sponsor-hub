@@ -1,0 +1,40 @@
+/* Element defaults and text-style utilities built on tokens.css */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'cv11', 'ss01';
+}
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3, h4 { margin: 0; color: var(--color-text-primary); }
+:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Text styles: same names as the SH/* text styles in Figma */
+.t-display { font-size: var(--font-size-display); line-height: var(--line-height-display); letter-spacing: var(--tracking-display); font-weight: var(--font-weight-bold); }
+.t-heading-1 { font-size: var(--font-size-heading-1); line-height: var(--line-height-heading-1); letter-spacing: var(--tracking-heading-1); font-weight: var(--font-weight-bold); }
+.t-heading-2 { font-size: var(--font-size-heading-2); line-height: var(--line-height-heading-2); letter-spacing: var(--tracking-heading-2); font-weight: var(--font-weight-semibold); }
+.t-heading-3 { font-size: var(--font-size-heading-3); line-height: var(--line-height-heading-3); letter-spacing: var(--tracking-heading-3); font-weight: var(--font-weight-semibold); }
+.t-heading-4 { font-size: var(--font-size-heading-4); line-height: var(--line-height-heading-4); font-weight: var(--font-weight-semibold); }
+.t-body-lg { font-size: var(--font-size-body-lg); line-height: var(--line-height-body-lg); font-weight: var(--font-weight-regular); }
+.t-body { font-size: var(--font-size-body); line-height: var(--line-height-body); font-weight: var(--font-weight-regular); }
+.t-body-strong { font-size: var(--font-size-body); line-height: var(--line-height-body); font-weight: var(--font-weight-semibold); }
+.t-body-sm { font-size: var(--font-size-body-sm); line-height: var(--line-height-body-sm); font-weight: var(--font-weight-regular); }
+.t-label { font-size: var(--font-size-label); line-height: var(--line-height-label); font-weight: var(--font-weight-medium); }
+.t-label-sm { font-size: var(--font-size-label-sm); line-height: var(--line-height-label-sm); font-weight: var(--font-weight-medium); }
+.t-caption { font-size: var(--font-size-caption); line-height: var(--line-height-caption); font-weight: var(--font-weight-regular); }
+.t-overline { font-size: var(--font-size-overline); line-height: var(--line-height-overline); letter-spacing: var(--tracking-overline); font-weight: var(--font-weight-semibold); text-transform: uppercase; }
+.t-stat { font-size: var(--font-size-stat); line-height: var(--line-height-stat); letter-spacing: var(--tracking-stat); font-weight: var(--font-weight-semibold); font-variant-numeric: tabular-nums; }
+.t-secondary { color: var(--color-text-secondary); }
+.t-muted { color: var(--color-text-muted); }
+.t-link { color: var(--color-text-link); }

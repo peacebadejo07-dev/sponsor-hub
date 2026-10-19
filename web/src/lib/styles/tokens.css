@@ -1,0 +1,196 @@
+/*
+ * Sponsor Hub design tokens, generated from the Figma file
+ * (🌿 Foundations: SH Primitives, SH Color, SH Typography, SH Spacing,
+ * SH Radius and the SH effect styles). Names match each variable's
+ * code syntax in Figma, so a token in a Figma inspect panel is the
+ * same name here. Light mode only.
+ */
+:root {
+  color-scheme: light;
+
+  /* ---------- Primitives (don't use directly in components) ---------- */
+  --sh-white: #ffffff;
+  --sh-ink-950: #07121b;
+  --sh-ink-900: #0d1b26;
+  --sh-ink-800: #152836;
+  --sh-ink-700: #213747;
+  --sh-ink-600: #324a5c;
+  --sh-green-50: #edfbf2;
+  --sh-green-100: #d3f5df;
+  --sh-green-200: #a8ebc0;
+  --sh-green-300: #76dd9c;
+  --sh-green-400: #4fd07e;
+  --sh-green-500: #35c066;
+  --sh-green-600: #259e50;
+  --sh-green-700: #1b7d3e;
+  --sh-green-800: #176333;
+  --sh-green-900: #13502a;
+  --sh-green-950: #0c2e1e;
+  --sh-gray-25: #f8fafc;
+  --sh-gray-50: #f1f4f7;
+  --sh-gray-100: #e7ecf1;
+  --sh-gray-200: #d6dde4;
+  --sh-gray-300: #b9c3cd;
+  --sh-gray-350: #a3afbb;
+  --sh-gray-400: #7d8a97;
+  --sh-gray-500: #5c6876;
+  --sh-gray-600: #4c5866;
+  --sh-gray-700: #384350;
+  --sh-gray-800: #252f3a;
+  --sh-gray-900: #141b23;
+  --sh-sage-600: #5a946e;
+  --sh-amber-50: #fff6e5;
+  --sh-amber-100: #fde8bf;
+  --sh-amber-500: #e59a12;
+  --sh-amber-700: #94560a;
+  --sh-amber-800: #7a4609;
+  --sh-red-50: #fef1f1;
+  --sh-red-100: #fcdcdc;
+  --sh-red-500: #e5484d;
+  --sh-red-600: #c9302c;
+  --sh-red-700: #a8241f;
+  --sh-blue-50: #eef4ff;
+  --sh-blue-100: #dce7ff;
+  --sh-blue-700: #1e4fc2;
+
+  /* ---------- Semantic colour ---------- */
+  --color-bg-page: var(--sh-gray-50);
+  --color-bg-surface: var(--sh-white);
+  --color-bg-subtle: var(--sh-gray-25);
+  --color-bg-muted: var(--sh-gray-100);
+  --color-bg-inverse: var(--sh-ink-900);
+  --color-bg-inverse-deep: var(--sh-green-950);
+  --color-bg-brand: var(--sh-green-500); /* fill only: never text on white */
+  --color-bg-brand-hover: var(--sh-green-400);
+  --color-bg-brand-pressed: var(--sh-green-600);
+  --color-bg-brand-subtle: var(--sh-green-50);
+  --color-text-primary: var(--sh-ink-900);
+  --color-text-secondary: var(--sh-gray-600);
+  --color-text-muted: var(--sh-gray-500);
+  --color-text-inverse: var(--sh-white);
+  --color-text-inverse-secondary: var(--sh-gray-300);
+  --color-text-on-brand: var(--sh-ink-900);
+  --color-text-link: var(--sh-green-700);
+  --color-text-brand-on-inverse: var(--sh-green-300);
+  --color-text-danger: var(--sh-red-600);
+  --color-border-soft: var(--sh-gray-100); /* decorative, paired with --shadow-soft */
+  --color-border-subtle: var(--sh-gray-200);
+  --color-border-default: var(--sh-gray-300);
+  --color-border-field: var(--sh-gray-350);
+  --color-border-input: var(--sh-gray-400);
+  --color-border-focus: var(--sh-green-600);
+  --color-border-brand: var(--sh-green-500);
+  --color-border-brand-soft: var(--sh-sage-600);
+  --color-border-danger: var(--sh-red-600);
+  --color-icon-primary: var(--sh-ink-900);
+  --color-icon-secondary: var(--sh-gray-500);
+  --color-icon-brand: var(--sh-green-600);
+  --color-status-verified-bg: var(--sh-green-50);
+  --color-status-verified-fg: var(--sh-green-800);
+  --color-status-verified-border: var(--sh-green-200);
+  --color-status-inferred-bg: var(--sh-amber-50);
+  --color-status-inferred-fg: var(--sh-amber-800);
+  --color-status-inferred-border: var(--sh-amber-100);
+  --color-status-unconfirmed-bg: var(--sh-gray-100);
+  --color-status-unconfirmed-fg: var(--sh-gray-700);
+  --color-status-unconfirmed-border: var(--sh-gray-200);
+  --color-status-danger-bg: var(--sh-red-50);
+  --color-status-danger-fg: var(--sh-red-700);
+  --color-status-danger-border: var(--sh-red-100);
+  --color-status-info-bg: var(--sh-blue-50);
+  --color-status-info-fg: var(--sh-blue-700);
+  --color-status-info-border: var(--sh-blue-100);
+
+  /* ---------- Typography (desktop; phone sizes below) ---------- */
+  --font-family-sans: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-size-display: 48px;   --line-height-display: 56px;   --tracking-display: -0.96px;
+  --font-size-heading-1: 36px; --line-height-heading-1: 44px; --tracking-heading-1: -0.54px;
+  --font-size-heading-2: 28px; --line-height-heading-2: 36px; --tracking-heading-2: -0.28px;
+  --font-size-heading-3: 22px; --line-height-heading-3: 30px; --tracking-heading-3: -0.11px;
+  --font-size-heading-4: 18px; --line-height-heading-4: 26px;
+  --font-size-body-lg: 18px;   --line-height-body-lg: 28px;
+  --font-size-body: 16px;      --line-height-body: 24px;
+  --font-size-body-sm: 14px;   --line-height-body-sm: 22px;
+  --font-size-label: 14px;     --line-height-label: 20px;
+  --font-size-label-sm: 13px;  --line-height-label-sm: 18px;
+  --font-size-caption: 12px;   --line-height-caption: 18px;
+  --font-size-overline: 12px;  --line-height-overline: 16px;  --tracking-overline: 0.72px;
+  --font-size-stat: 32px;      --line-height-stat: 40px;      --tracking-stat: -0.32px;
+
+  /* ---------- Spacing and sizes ---------- */
+  --space-3xs: 2px;
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 40px;
+  --space-3xl: 48px;
+  --space-4xl: 64px;
+  --space-5xl: 80px;
+  --space-6xl: 96px;
+  --layout-content-max: 1200px;
+  --layout-reading-max: 640px;
+  --layout-gutter: 16px;
+  --size-control-sm: 32px;
+  --size-control-md: 44px;
+  --size-control-lg: 52px;
+  --size-touch-target: 44px;
+  --size-icon-sm: 16px;
+  --size-icon-md: 20px;
+  --size-icon-lg: 24px;
+
+  /* ---------- Radius and borders ---------- */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-full: 999px;
+  --border-width-default: 1px;
+  --border-width-strong: 1.5px;
+  --border-width-focus: 2px;
+
+  /* ---------- Shadows ---------- */
+  --shadow-xs: 0 1px 2px rgb(13 27 38 / 0.06);
+  --shadow-sm: 0 1px 2px rgb(13 27 38 / 0.05), 0 2px 6px -1px rgb(13 27 38 / 0.08);
+  --shadow-md: 0 2px 4px -1px rgb(13 27 38 / 0.06), 0 8px 16px -4px rgb(13 27 38 / 0.12);
+  --shadow-lg: 0 4px 8px -2px rgb(13 27 38 / 0.06), 0 20px 40px -8px rgb(13 27 38 / 0.18);
+  --shadow-soft: 0 3px 8px rgb(156 159 181 / 0.12);
+  --focus-ring: 0 0 0 2px var(--sh-white), 0 0 0 4px var(--sh-green-600);
+
+  /* ---------- Old names, kept so pages not yet restyled still work ---------- */
+  --bg: var(--color-bg-page);
+  --surface: var(--color-bg-surface);
+  --ink: var(--color-text-primary);
+  --muted: var(--color-text-secondary);
+  --line: var(--color-border-subtle);
+  --accent: var(--color-text-link);
+  --accent-ink: var(--sh-white);
+  --accent-soft: var(--color-bg-brand-subtle);
+  --verified: var(--color-status-verified-fg);
+  --inferred: var(--color-status-inferred-fg);
+  --inferred-soft: var(--color-status-inferred-bg);
+  --radius: var(--radius-xl);
+}
+
+/* Phone type scale (Figma "Mobile" mode) and gutter */
+@media (max-width: 640px) {
+  :root {
+    --font-size-display: 36px;   --line-height-display: 44px;   --tracking-display: -0.72px;
+    --font-size-heading-1: 30px; --line-height-heading-1: 38px; --tracking-heading-1: -0.45px;
+    --font-size-heading-2: 24px; --line-height-heading-2: 32px; --tracking-heading-2: -0.24px;
+    --font-size-heading-3: 20px; --line-height-heading-3: 28px; --tracking-heading-3: -0.1px;
+    --font-size-body-lg: 17px;   --line-height-body-lg: 26px;
+    --font-size-stat: 28px;      --line-height-stat: 36px;      --tracking-stat: -0.28px;
+  }
+}
+@media (min-width: 1024px) {
+  :root { --layout-gutter: 32px; }
+}
