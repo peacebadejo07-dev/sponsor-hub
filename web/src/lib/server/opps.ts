@@ -134,3 +134,9 @@ export async function orgLastScan(nameKey: string) {
   const [r] = await sql<{ at: string | null }[]>`select max(finished_at)::text as at from org_scans where name_key = ${nameKey} and ok`;
   return r?.at ?? null;
 }
+
+/** Active entries on the Home Office register (each licensed location counts). */
+export async function registerCount() {
+  const [r] = await sql<{ n: number }[]>`select count(*)::int as n from orgs where status = 'active'`;
+  return r.n;
+}

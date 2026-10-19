@@ -3,10 +3,12 @@ import type { Actions, PageServerLoad } from './$types';
 import { requestLogin } from '@sponsored/accounts';
 import { sql } from '$lib/server/db';
 import { authConfig, safeNext } from '$lib/server/auth';
+import { oppSummary, registerCount } from '$lib/server/opps';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
   if (locals.user) redirect(303, safeNext(url.searchParams.get('next'), '/for-you'));
-  return { next: safeNext(url.searchParams.get('next'), '') };
+  const [summary, register] = await Promise.all([oppSummary(), registerCount()]);
+  return { next: safeNext(url.searchParams.get('next'), ''), stats: { live: summary.live, hiring: summary.orgs, register } };
 };
 
 export const actions: Actions = {
