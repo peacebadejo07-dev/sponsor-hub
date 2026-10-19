@@ -9,7 +9,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   if (!locals.user) redirect(303, '/login?next=/profile');
   const { profile, exists } = await getProfile(sql, locals.user.userId);
   const [{ digest_opt_in }] = await sql<{ digest_opt_in: boolean }[]>`select digest_opt_in from users where id = ${locals.user.userId}`;
-  return { digest: digest_opt_in, profile, exists, welcome: url.searchParams.get('welcome') === '1', cities: await topCities(), email: locals.user.email };
+  return {
+    digest: digest_opt_in, profile, exists, welcome: url.searchParams.get('welcome') === '1',
+    // Arrived from a Subscribe banner: offer the switch (a POST), never flip it from a link.
+    subscribe: url.searchParams.get('subscribe') === '1' && !digest_opt_in,
+    cities: await topCities(), email: locals.user.email
+  };
 };
 
 export const actions: Actions = {
@@ -24,7 +29,15 @@ export const actions: Actions = {
     });
     await saveProfile(sql, locals.user.userId, profile);
     await setDigest(sql, locals.user.userId, f.get('digest') === 'on');
+    // First save of a new profile goes straight to the ranked list it was for.
+    if (f.get('then') === 'for-you') redirect(303, '/for-you');
     return { saved: true };
+  },
+
+  subscribe: async ({ locals }) => {
+    if (!locals.user) redirect(303, '/login?next=/profile');
+    await setDigest(sql, locals.user.userId, true);
+    return { subscribed: true };
   },
 
   signOutEverywhere: async ({ locals, cookies }) => {
