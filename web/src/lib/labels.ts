@@ -40,3 +40,26 @@ export function ago(iso: string | Date | null): string {
   const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
   return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d < 60 ? `${d} days ago` : `${Math.floor(d / 30)} months ago`;
 }
+
+export const ATS_NAMES: Record<string, string> = {
+  greenhouse: 'Greenhouse', lever: 'Lever', ashby: 'Ashby', workable: 'Workable', smartrecruiters: 'SmartRecruiters',
+  workday: 'Workday', teamtailor: 'Teamtailor', bamboohr: 'BambooHR', recruitee: 'Recruitee', personio: 'Personio', jsonld: 'their careers page'
+};
+
+/** Compact salary for a tag: "£70k–£85k", "£450 a day". */
+export function moneyShort(o: { salary_min: number | null; salary_max: number | null; salary_currency: string | null; salary_period: string | null }): string | null {
+  if (o.salary_min == null) return null;
+  const s = SYMBOL[o.salary_currency ?? ''] ?? '';
+  const year = (o.salary_period ?? 'year') === 'year';
+  const f = (n: number) => (year && n >= 1000 ? `${s}${Math.round(n / 1000)}k` : `${s}${n.toLocaleString('en-GB')}`);
+  const max = o.salary_max ?? o.salary_min;
+  const range = max !== o.salary_min ? `${f(o.salary_min)}–${f(max)}` : f(o.salary_min);
+  return year ? range : `${range} ${PERIOD[o.salary_period ?? 'year']}`;
+}
+
+/** First place from a "London, England | Leeds, England" list, plus how many more. */
+export function place(locationRaw: string): { first: string; more: number; all: string } {
+  const parts = locationRaw.split(/\s*[|;]\s*/).map((p) => p.split(',')[0].trim()).filter(Boolean);
+  const uniq = [...new Set(parts)];
+  return { first: uniq[0] ?? 'Location not stated', more: Math.max(0, uniq.length - 1), all: uniq.join(', ') };
+}

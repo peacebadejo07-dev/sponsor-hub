@@ -73,9 +73,9 @@
 }
 .chip:hover { background: var(--color-bg-muted); }
 .chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-.chip .icon { display: none; }
+.chip svg.icon { display: none; }
 .chip:has(input:checked) { background: var(--color-bg-brand-subtle); border: var(--border-width-strong) solid var(--color-icon-brand); color: var(--color-text-link); padding: 0 calc(var(--space-sm) - 0.5px); }
-.chip:has(input:checked) .icon { display: inline-block; }
+.chip:has(input:checked) svg.icon { display: inline-block; }
 .chip:has(input:focus-visible) { box-shadow: var(--focus-ring); }
 .chip .count { color: var(--color-text-muted); font-weight: var(--font-weight-regular); }
 .chip:has(input:checked) .count { color: inherit; }
