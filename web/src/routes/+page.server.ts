@@ -1,13 +1,15 @@
 import type { PageServerLoad } from './$types';
 import { PAGE_SIZE, searchOrgs, topTowns, registerInfo, type OrgFilters } from '$lib/server/orgs';
 import { SECTOR_LABELS, SECTOR_TAGS } from '@sponsored/core';
+import { savedOrgIds } from '@sponsored/accounts';
+import { sql } from '$lib/server/db';
 
 // Postgres rejects NUL bytes in text, so strip control characters from every input.
 const clean = (s: string) => s.replace(/[\u0000-\u001f]/g, '');
 const all = (u: URL, k: string) => u.searchParams.getAll(k).map(clean).filter(Boolean);
 const one = (u: URL, k: string) => clean(u.searchParams.get(k) ?? '').trim();
 
-export const load: PageServerLoad = async ({ url, setHeaders }) => {
+export const load: PageServerLoad = async ({ url, setHeaders, locals }) => {
   const filters: OrgFilters = {
     q: one(url, 'q').slice(0, 80),
     sectors: all(url, 'sector').filter((s) => (SECTOR_TAGS as readonly string[]).includes(s)),
@@ -19,6 +21,8 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
   };
   setHeaders({ 'cache-control': 'public, max-age=60, s-maxage=300' });
   const [result, towns, register] = await Promise.all([searchOrgs(filters), topTowns(), registerInfo()]);
+  // Signed-in responses are private (see hooks.server.ts), so per-user follow state is safe here.
+  const following = locals.user ? [...(await savedOrgIds(sql, locals.user.userId, result.orgs.map((o) => o.id)))] : [];
   return {
     filters,
     ...result,
@@ -26,6 +30,8 @@ export const load: PageServerLoad = async ({ url, setHeaders }) => {
     register,
     pageSize: PAGE_SIZE,
     pages: Math.max(1, Math.ceil(result.total / PAGE_SIZE)),
-    sectorLabels: SECTOR_LABELS
+    sectorLabels: SECTOR_LABELS,
+    loggedIn: !!locals.user,
+    following
   };
 };

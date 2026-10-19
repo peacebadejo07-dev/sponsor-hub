@@ -1,14 +1,18 @@
 <script lang="ts">
   import { RATING_LABELS, RATING_HELP } from '$lib/labels';
-  import { safeHref } from '$lib/safeHref';
+  import Icon from '$lib/ui/Icon.svelte';
+  import EmptyState from '$lib/ui/EmptyState.svelte';
+  import OrgCard from '$lib/ui/OrgCard.svelte';
+  import SubscribeBanner from '$lib/ui/SubscribeBanner.svelte';
+  import ProfileBanner from '$lib/ui/ProfileBanner.svelte';
   import { SECTOR_TAGS } from '@sponsored/core';
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   let { data } = $props();
-  // Open on desktop; on phones start collapsed unless filters are already active, so results are visible.
+  // Open on desktop; on smaller screens start collapsed so results are visible.
   let filtersOpen = $state(true);
   onMount(() => {
-    if (window.innerWidth < 820 && activeCount === 0) filtersOpen = false;
+    if (window.innerWidth < 1024) filtersOpen = false;
   });
 
   const f = $derived(data.filters);
@@ -32,192 +36,140 @@
     SECTOR_TAGS.filter((t) => (sectorFacets.get(t) ?? 0) > 0 || f.sectors.includes(t))
   );
   const fmt = (n: number) => n.toLocaleString('en-GB');
+  const following = $derived(new Set(data.following));
+  const returnTo = $derived(page.url.pathname + page.url.search);
+  const first = $derived((f.page - 1) * data.pageSize + 1);
+  const last = $derived(Math.min(f.page * data.pageSize, data.total));
 </script>
 
 {#if page.url.searchParams.get('deleted') === '1'}
-  <p class="banner" role="status">Your account and everything saved with it have been deleted.</p>
+  <p class="notice" role="status"><Icon name="check-circle" />Your account and everything saved with it have been deleted.</p>
 {/if}
 
-<div class="head">
-  <div>
-    <h1>UK organisations licensed to sponsor workers</h1>
-    <p class="sub">
-      {fmt(data.total)} match{data.total === 1 ? '' : 'es'}{#if data.register}{' '}· register published {data.register.published_on}{/if}
-    </p>
+<header class="page-head">
+  <h1 class="t-heading-1">UK organisations licensed to sponsor workers</h1>
+  <p class="t-body-lg t-secondary">{`${fmt(data.total)} match${data.total === 1 ? '' : 'es'}${data.register ? ` · register published ${data.register.published_on}` : ''}`}</p>
+</header>
+
+<form id="org-filters" method="GET" action="/"></form>
+
+<search class="search card" aria-label="Search organisations">
+  <div class="field">
+    <label class="field-label" for="q">Organisation name</label>
+    <div class="control"><Icon name="search" /><input id="q" form="org-filters" type="search" name="q" value={f.q} placeholder="e.g. cyber, analytics" /></div>
   </div>
-  <p class="legend" aria-label="How to read the labels">
-    <span><span class="badge verified">Verified</span> from the Home Office register</span>
-    <span><span class="badge inferred">Inferred</span> worked out by us, can be wrong</span>
-  </p>
-</div>
+  <div class="field">
+    <label class="field-label" for="town">Town or city</label>
+    <div class="control"><Icon name="map-pin" /><input id="town" form="org-filters" type="text" name="town" value={f.town} list="towns" placeholder="Anywhere in the UK" autocomplete="off" /></div>
+    <datalist id="towns">{#each data.towns as t (t.value)}<option value={t.value}>{fmt(t.count)}</option>{/each}</datalist>
+  </div>
+  <button type="submit" form="org-filters" class="btn btn-primary"><Icon name="search" />Search</button>
+</search>
 
 <div class="layout">
-  <details class="filters" bind:open={filtersOpen}>
-    <summary>Filters{#if activeCount}{' '}({activeCount}){/if}</summary>
-    <form method="GET" action="/">
-      <label class="field">
-        <span>Organisation name</span>
-        <input type="search" name="q" value={f.q} placeholder="e.g. cyber, analytics" />
-      </label>
-
-      <label class="field">
-        <span>Town / city</span>
-        <input type="text" name="town" value={f.town} list="towns" placeholder="Anywhere in the UK" autocomplete="off" />
-        <datalist id="towns">
-          {#each data.towns as t (t.value)}<option value={t.value}>{fmt(t.count)}</option>{/each}
-        </datalist>
-      </label>
-
-      <fieldset>
-        <legend>Website <span class="badge inferred">Inferred</span></legend>
-        <p class="hint">Websites are found automatically for a growing shortlist, starting with tech organisations.</p>
-        <label class="check">
-          <input type="checkbox" name="careers" value="1" checked={f.hasCareers} />
-          <span>Has a careers page</span>
-        </label>
-      </fieldset>
-
-      <fieldset>
-        <legend>Sector <span class="badge inferred">Inferred</span></legend>
-        <p class="hint">Guessed from the organisation's name only. Many organisations are untagged.</p>
-        {#each sectorOptions as t (t)}
-          <label class="check">
-            <input type="checkbox" name="sector" value={t} checked={f.sectors.includes(t)} />
-            <span>{data.sectorLabels[t]}</span>
-            <em>{fmt(sectorFacets.get(t) ?? 0)}</em>
-          </label>
-        {/each}
-      </fieldset>
-
-      <fieldset>
-        <legend>Sponsorship category <span class="badge verified">Verified</span></legend>
-        {#each data.routeFacets as r (r.value)}
-          <label class="check">
-            <input type="checkbox" name="route" value={r.value} checked={f.routes.includes(r.value)} />
-            <span>{r.value}</span>
-            <em>{fmt(r.count)}</em>
-          </label>
-        {/each}
-      </fieldset>
-
-      <fieldset>
-        <legend>Sponsorship rating <span class="badge verified">Verified</span></legend>
-        {#each data.ratingFacets as r (r.value)}
-          <label class="check" title={RATING_HELP[r.value] ?? ''}>
-            <input type="checkbox" name="rating" value={r.value} checked={f.ratings.includes(r.value)} />
-            <span>{RATING_LABELS[r.value] ?? r.value}</span>
-            <em>{fmt(r.count)}</em>
-          </label>
-        {/each}
-      </fieldset>
-
-      <div class="actions">
-        <button type="submit" class="primary">Apply filters</button>
-        {#if activeCount}<a href="/" class="reset">Clear all</a>{/if}
+  <details class="filters card" bind:open={filtersOpen}>
+    <summary class="btn btn-secondary btn-sm"><Icon name="filter" size={16} />Filters{#if activeCount}{' '}({activeCount}){/if}</summary>
+    <div class="filters-body">
+      <div class="filters-head">
+        <h2 class="t-heading-4">Filters{#if activeCount}{' '}({activeCount}){/if}</h2>
+        {#if activeCount}<a href="/" class="btn btn-ghost btn-sm">Clear all</a>{/if}
       </div>
-    </form>
+
+      <fieldset>
+        <legend class="t-overline">Website <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
+        <p class="t-caption t-secondary hint">Websites are found automatically for a growing shortlist, starting with tech organisations.</p>
+        <div class="chips"><label class="chip"><input form="org-filters" type="checkbox" name="careers" value="1" checked={f.hasCareers} /><Icon name="check" size={16} />Has a careers page</label></div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="t-overline">Sector <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
+        <p class="t-caption t-secondary hint">From Companies House codes, the organisation's website or its roles. Many organisations are untagged.</p>
+        <div class="chips">
+          {#each sectorOptions as t (t)}
+            <label class="chip"><input form="org-filters" type="checkbox" name="sector" value={t} checked={f.sectors.includes(t)} /><Icon name="check" size={16} />{data.sectorLabels[t]} <span class="count">· {fmt(sectorFacets.get(t) ?? 0)}</span></label>
+          {/each}
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="t-overline">Sponsorship route <span class="prov prov-verified"><Icon name="check-circle" size={14} />Verified</span></legend>
+        <div class="chips">
+          {#each data.routeFacets as r (r.value)}
+            <label class="chip"><input form="org-filters" type="checkbox" name="route" value={r.value} checked={f.routes.includes(r.value)} /><Icon name="check" size={16} />{r.value} <span class="count">· {fmt(r.count)}</span></label>
+          {/each}
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="t-overline">Rating <span class="prov prov-verified"><Icon name="check-circle" size={14} />Verified</span></legend>
+        <div class="chips">
+          {#each data.ratingFacets as r (r.value)}
+            <label class="chip" title={RATING_HELP[r.value] ?? ''}><input form="org-filters" type="checkbox" name="rating" value={r.value} checked={f.ratings.includes(r.value)} /><Icon name="check" size={16} />{RATING_LABELS[r.value] ?? r.value} <span class="count">· {fmt(r.count)}</span></label>
+          {/each}
+        </div>
+      </fieldset>
+
+      <button type="submit" form="org-filters" class="btn btn-primary btn-block">Apply filters</button>
+    </div>
   </details>
 
-  <section aria-live="polite">
+  <section class="results" aria-labelledby="org-count">
+    <p id="org-count" class="t-label" role="status">{#if data.orgs.length}Showing {fmt(first)}–{fmt(last)} of {fmt(data.total)} organisations{:else}No organisations match{/if}</p>
     {#if data.orgs.length === 0}
-      <div class="empty">
-        <strong>No organisations match these filters.</strong>
-        <p>Try removing a filter or searching a shorter name.</p>
-        <a href="/">Clear all filters</a>
-      </div>
+      <EmptyState icon="building" title="No organisations match these filters" body="Try removing a filter or searching a shorter name.">
+        <a class="btn btn-primary" href="/">Clear all filters</a>
+      </EmptyState>
     {:else}
-      <ul class="list">
-        {#each data.orgs as o (o.id)}
-          {@const tags = o.all_sector_tags.filter((t) => t !== 'tech' || o.all_sector_tags.length === 1)}
-          <li class="card">
-            <div class="row1">
-              <h2><a href={`/org/${o.id}`}>{o.name.trim()}</a></h2>
-              <span class="rating" title={RATING_HELP[o.rating] ?? ''}>{RATING_LABELS[o.rating] ?? o.rating}</span>
-            </div>
-            <p class="loc">{[o.town, o.county].filter(Boolean).join(', ') || 'Location not listed'}</p>
-            <p class="routes">{o.routes.join(' · ')}</p>
-            {#if o.website || o.careers_url}
-              <p class="links">
-                {#if o.website}<a href={safeHref(o.website)} rel="noopener nofollow" target="_blank">{o.website.replace(/^https?:\/\/(www\.)?/, '')}</a>{/if}
-                {#if o.careers_url}<a class="careers" href={safeHref(o.careers_url)} rel="noopener nofollow" target="_blank">Careers page ↗</a>{/if}
-                <span class="badge inferred" title="Found automatically; the match may be wrong">Inferred</span>
-              </p>
-            {:else if o.resolve_status === 'candidate'}
-              <p class="links muted">Possible website found but not verified</p>
-            {/if}
-            {#if tags.length}
-              <p class="tags">
-                {#each tags as t (t)}
-                  <span class="tag" title="Inferred from the organisation name">{data.sectorLabels[t as keyof typeof data.sectorLabels]}</span>
-                {/each}
-                <span class="badge inferred">Inferred</span>
-              </p>
-            {/if}
-          </li>
-        {/each}
+      <ul class="grid">
+        {#each data.orgs as o (o.id)}<OrgCard {o} sectorLabels={data.sectorLabels} loggedIn={data.loggedIn} following={following.has(o.id)} {returnTo} />{/each}
       </ul>
-
       {#if data.pages > 1}
         <nav class="pager" aria-label="Pagination">
-          {#if f.page > 1}<a href={pageHref(f.page - 1)} rel="prev">← Previous</a>{:else}<span></span>{/if}
-          <span>Page {fmt(f.page)} of {fmt(data.pages)}</span>
-          {#if f.page < data.pages}<a href={pageHref(f.page + 1)} rel="next">Next →</a>{:else}<span></span>{/if}
+          {#if f.page > 1}<a class="btn btn-secondary" href={pageHref(f.page - 1)} rel="prev"><Icon name="arrow-left" size={16} />Previous</a>{:else}<span class="btn btn-secondary" aria-disabled="true">Previous</span>{/if}
+          <span class="t-body-sm t-secondary">Page {fmt(f.page)} of {fmt(data.pages)}</span>
+          {#if f.page < data.pages}<a class="btn btn-secondary" href={pageHref(f.page + 1)} rel="next">Next<Icon name="arrow-right" size={16} /></a>{:else}<span class="btn btn-secondary" aria-disabled="true">Next</span>{/if}
         </nav>
       {/if}
     {/if}
   </section>
 </div>
 
+<div class="banners">
+  <SubscribeBanner loggedIn={data.loggedIn} />
+  <ProfileBanner loggedIn={data.loggedIn} />
+</div>
+
 <style>
-  .banner { background: var(--accent-soft); border-radius: 8px; padding: 12px 14px; margin: 0 0 16px; }
-  .head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px; align-items: end; margin-bottom: 20px; }
-  h1 { font-size: 24px; margin: 0 0 2px; letter-spacing: -0.015em; }
-  .sub { margin: 0; color: var(--muted); }
-  .legend { margin: 0; font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
-  .badge { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; letter-spacing: 0.02em; vertical-align: 1px; }
-  .badge.verified { background: var(--accent-soft); color: var(--verified); }
-  .badge.inferred { background: var(--inferred-soft); color: var(--inferred); }
-
-  .layout { display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
-  .filters { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; position: sticky; top: 72px; max-height: calc(100vh - 88px); overflow: auto; }
-  .filters summary { font-weight: 600; cursor: pointer; list-style: none; }
-  .filters summary::-webkit-details-marker { display: none; }
-  .filters form { margin-top: 12px; display: grid; gap: 14px; }
-  .field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
-  .field input { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 15px; }
-  fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 2px; }
-  legend { font-weight: 600; font-size: 13px; padding: 0; margin-bottom: 4px; }
-  .hint { margin: 0 0 4px; font-size: 12px; color: var(--muted); }
-  .check { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 14px; cursor: pointer; }
-  .check span { flex: 1; }
-  .check em { font-style: normal; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-  .check input { accent-color: var(--accent); width: 16px; height: 16px; }
-  .actions { display: flex; align-items: center; gap: 12px; position: sticky; bottom: -14px; background: var(--surface); padding: 8px 0; }
-  .primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 8px; padding: 9px 16px; font-weight: 600; cursor: pointer; }
-  .reset { font-size: 14px; color: var(--muted); }
-
-  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
-  .row1 { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
-  h2 { font-size: 16px; margin: 0; font-weight: 600; overflow-wrap: anywhere; }
-  .rating { font-size: 12px; font-weight: 600; color: var(--verified); background: var(--accent-soft); padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
-  .loc { margin: 2px 0 0; color: var(--muted); }
-  .routes { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
-  h2 a { text-decoration: none; }
-  h2 a:hover { text-decoration: underline; }
-  .links { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 13px; }
-  .links a { color: var(--accent); }
-  .links .careers { font-weight: 600; }
-  .links.muted { color: var(--muted); }
-  .tags { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .tag { font-size: 12px; background: var(--bg); border: 1px solid var(--line); padding: 1px 8px; border-radius: 99px; }
-  .empty { background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); padding: 28px; text-align: center; color: var(--muted); }
-  .empty strong { color: var(--ink); }
-  .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; color: var(--muted); font-size: 14px; }
-  .pager a { color: var(--accent); font-weight: 600; text-decoration: none; padding: 6px 4px; }
-
-  @media (max-width: 820px) {
-    .layout { grid-template-columns: 1fr; }
-    .filters { position: static; max-height: none; }
+  .notice { display: flex; gap: var(--space-sm); align-items: center; margin: 0 0 var(--space-lg); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-md); background: var(--color-status-verified-bg); color: var(--color-status-verified-fg); }
+  .page-head { display: grid; gap: var(--space-xs); margin-bottom: var(--space-xl); }
+  .page-head p { margin: 0; }
+  .search { display: grid; grid-template-columns: 1fr 1fr auto; gap: var(--space-md); align-items: end; padding: var(--space-lg); margin-bottom: var(--space-xl); }
+  .layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--space-xl); align-items: start; }
+  .filters { padding: var(--space-lg); position: sticky; top: 96px; max-height: calc(100vh - 112px); overflow: auto; }
+  .filters > summary { display: none; }
+  .filters-body { display: grid; gap: var(--space-lg); }
+  .filters-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-xs); }
+  fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: var(--space-sm); min-width: 0; }
+  legend { display: flex; align-items: center; gap: var(--space-xs); padding: 0; margin-bottom: var(--space-sm); color: var(--color-text-secondary); }
+  legend .prov { text-transform: none; letter-spacing: 0; }
+  .hint { margin: calc(-1 * var(--space-xs)) 0 0; }
+  .results { display: grid; gap: var(--space-md); min-width: 0; }
+  .results > p { margin: 0; }
+  .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: var(--space-md); }
+  .pager { display: flex; justify-content: space-between; align-items: center; gap: var(--space-sm); }
+  .banners { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-lg); margin-top: var(--space-4xl); }
+  @media (max-width: 1023px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
+    .filters { position: static; max-height: none; overflow: visible; padding: 0; background: none; border: 0; box-shadow: none; }
+    .filters > summary { display: inline-flex; list-style: none; }
+    .filters > summary::-webkit-details-marker { display: none; }
+    .filters[open] > summary { margin-bottom: var(--space-md); }
+    .filters-body { padding: var(--space-lg); background: var(--color-bg-surface); border: 1px solid var(--color-border-soft); border-radius: var(--radius-xl); box-shadow: var(--shadow-soft); }
+    .banners { grid-template-columns: minmax(0, 1fr); margin-top: var(--space-2xl); }
+  }
+  @media (max-width: 640px) {
+    .page-head { margin-bottom: var(--space-lg); }
+    .search { grid-template-columns: minmax(0, 1fr); padding: var(--space-md); margin-bottom: var(--space-lg); }
+    .search .btn { width: 100%; }
   }
 </style>

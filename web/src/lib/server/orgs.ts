@@ -41,6 +41,11 @@ export interface OrgRow {
   website_confidence: number | null;
   careers_url: string | null;
   ats_type: string | null;
+  sector_basis: string | null;
+  live: number;
+  offered: number;
+  branches: number;
+  last_scan: string | null;
 }
 
 export interface Facet {
@@ -52,10 +57,18 @@ export async function searchOrgs(f: OrgFilters) {
   const w = where(f);
   const [orgs, [{ n }], sectorFacets, routeFacets, ratingFacets] = await Promise.all([
     sql<OrgRow[]>`
-      select id, name, town, county, rating, routes, worker_types, all_sector_tags, resolve_status, website,
-             website_confidence, careers_url, ats_type
-      from orgs_enriched where ${w}
-      order by name_key, id
+      select e.id, e.name, e.town, e.county, e.rating, e.routes, e.worker_types, e.all_sector_tags, e.resolve_status, e.website,
+             e.website_confidence, e.careers_url, e.ats_type, e.sector_basis,
+             coalesce(j.live, 0) as live, coalesce(j.offered, 0) as offered,
+             (select count(*)::int from orgs b where b.name_key = e.name_key and b.status = 'active') as branches,
+             (select max(finished_at)::text from org_scans s where s.name_key = e.name_key and s.ok) as last_scan
+      from orgs_enriched e
+      left join lateral (
+        select count(*)::int as live, count(*) filter (where sponsorship_signal = 'offered')::int as offered
+        from opportunities x where x.name_key = e.name_key and x.status = 'live'
+      ) j on true
+      where ${w}
+      order by e.name_key, e.id
       limit ${PAGE_SIZE} offset ${(f.page - 1) * PAGE_SIZE}`,
     sql<{ n: number }[]>`select count(*)::int as n from orgs_enriched where ${w}`,
     sql<Facet[]>`select t as value, count(*)::int as count from orgs_enriched, unnest(all_sector_tags) t
