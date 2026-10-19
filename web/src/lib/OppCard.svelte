@@ -25,7 +25,7 @@
    */
   let {
     o, loggedIn, mark = null, match = null, returnTo, showOrg = true, flag = null, headingLevel = 2
-  }: { o: Opp; loggedIn: boolean; mark?: string | null; match?: Match | null; returnTo: string; showOrg?: boolean; flag?: Flag | null; headingLevel?: 2 | 3 } = $props();
+  }: { o: Opp; loggedIn: boolean; mark?: string | null; match?: Match | null; returnTo: string; showOrg?: boolean; flag?: Flag | null; headingLevel?: 2 | 3 | 4 } = $props();
 
   const st = (f: string) => o.provenance?.[f]?.status ?? 'unconfirmed';
   const where = $derived(place(o.location_raw));

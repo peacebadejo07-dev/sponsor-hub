@@ -30,13 +30,15 @@ export interface RankedRow {
   changed_at: string | null;
   stale_reason: string | null;
   status: string;
+  expired_at: string | null;
+  ats_type: string | null;
   provenance: Record<string, { status: string }>;
 }
 
 export function ranked(sql: Sql) {
   return sql`id, org_id, org_name, title, role_family, seniority, city, location_raw, work_mode, employment_type, salary_min, salary_max,
   salary_currency, salary_period, skills, years_experience, apply_url, sponsorship_signal, sponsorship_snippet, posted_at, first_seen_at, last_seen_at,
-  changed_at, stale_reason, status, provenance`;
+  changed_at, stale_reason, status, expired_at, ats_type, provenance`;
 }
 
 export interface RankOptions {
