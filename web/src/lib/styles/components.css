@@ -1,0 +1,144 @@
+/*
+ * Shared component styles. Each block matches a component in Figma ›
+ * Components and uses its variants' exact sizes and tokens.
+ */
+
+/* ---------- Button (Primary / Secondary / Ghost, Medium 44 / Small 32) ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-xs);
+  min-height: var(--size-control-md); padding: 0 var(--space-lg);
+  border: var(--border-width-default) solid transparent; border-radius: var(--radius-full);
+  font-size: var(--font-size-label); line-height: var(--line-height-label); font-weight: var(--font-weight-medium);
+  text-decoration: none; white-space: nowrap; cursor: pointer;
+  background: transparent; color: var(--color-text-primary);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.btn:focus-visible { border-radius: var(--radius-full); }
+.btn-primary { background: var(--color-bg-brand); color: var(--color-text-on-brand); }
+.btn-primary:hover { background: var(--color-bg-brand-hover); }
+.btn-primary:active { background: var(--color-bg-brand-pressed); }
+.btn-secondary { background: var(--color-bg-surface); border-color: var(--color-border-input); }
+.btn-secondary:hover { background: var(--color-bg-muted); }
+.btn-ghost { color: var(--color-text-link); }
+.btn-ghost:hover { background: var(--color-bg-brand-subtle); }
+.btn-sm { min-height: var(--size-control-sm); padding: 0 var(--space-md); font-size: var(--font-size-label-sm); line-height: var(--line-height-label-sm); }
+/* Small buttons keep a 44px tap area without looking bigger */
+.btn-sm { position: relative; }
+.btn-sm::after { content: ''; position: absolute; inset: -6px 0; }
+.btn-block { display: flex; width: 100%; }
+.btn:disabled, .btn[aria-disabled='true'] { cursor: not-allowed; background: var(--color-bg-muted); border-color: transparent; color: var(--color-text-muted); }
+.btn-secondary:disabled { background: var(--color-bg-surface); border-color: var(--color-border-subtle); }
+.btn-ghost:disabled { background: transparent; }
+
+/* ---------- Input (label, 44px field, help text) ---------- */
+.field { display: grid; gap: var(--space-xs); min-width: 0; }
+.field-label { font-size: var(--font-size-label); line-height: var(--line-height-label); font-weight: var(--font-weight-medium); color: var(--color-text-primary); }
+.field-help { font-size: var(--font-size-body-sm); line-height: var(--line-height-body-sm); color: var(--color-text-secondary); margin: 0; }
+.field-error { display: flex; gap: var(--space-2xs); align-items: flex-start; font-size: var(--font-size-body-sm); line-height: var(--line-height-body-sm); color: var(--color-text-danger); margin: 0; }
+.field-error .icon { margin-top: 1px; }
+.control {
+  display: flex; align-items: center; gap: var(--space-xs);
+  min-height: var(--size-control-md); padding: 0 var(--space-sm);
+  background: var(--color-bg-surface); border: var(--border-width-default) solid var(--color-border-field);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-soft); color: var(--color-icon-primary);
+}
+.control:hover { border-color: var(--color-border-input); }
+.control:focus-within { border-color: var(--color-border-focus); box-shadow: 0 0 0 1px var(--color-border-focus); }
+.control.invalid, .control:has([aria-invalid='true']) { border-color: var(--color-border-danger); box-shadow: 0 0 0 0.5px var(--color-border-danger); }
+.control input, .control select {
+  flex: 1; min-width: 0; height: calc(var(--size-control-md) - 2px); border: 0; outline: 0; background: transparent; padding: 0;
+  font-size: var(--font-size-body); color: var(--color-text-primary); appearance: none;
+}
+.control input::placeholder { color: var(--color-text-muted); opacity: 1; }
+.control input:focus-visible, .control select:focus-visible { box-shadow: none; }
+.control select { cursor: pointer; padding-right: var(--space-lg); }
+.control .chev { margin-left: calc(-1 * var(--space-lg) - var(--space-xs)); pointer-events: none; }
+
+/* ---------- Tag (Neutral / Brand / Outline, 28px) ---------- */
+.tag {
+  display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: 28px; padding: 0 var(--space-xs);
+  border-radius: var(--radius-sm); background: var(--color-bg-muted); color: var(--color-text-secondary);
+  font-size: var(--font-size-label-sm); line-height: var(--line-height-label-sm); font-weight: var(--font-weight-medium); white-space: nowrap;
+}
+.tag-brand { background: var(--color-bg-brand-subtle); color: var(--color-text-link); }
+.tag-outline { background: var(--color-bg-surface); box-shadow: inset 0 0 0 1px var(--color-border-default); }
+.tags { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+
+/* ---------- Filter chip (checkbox or radio inside a label, 32px pill) ---------- */
+.chip {
+  position: relative; display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: var(--size-control-sm); padding: 0 var(--space-sm);
+  border: var(--border-width-default) solid var(--color-border-input); border-radius: var(--radius-full); background: var(--color-bg-surface);
+  font-size: var(--font-size-label); line-height: var(--line-height-label); font-weight: var(--font-weight-medium); color: var(--color-text-primary);
+  cursor: pointer; user-select: none;
+}
+.chip:hover { background: var(--color-bg-muted); }
+.chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chip .icon { display: none; }
+.chip:has(input:checked) { background: var(--color-bg-brand-subtle); border: var(--border-width-strong) solid var(--color-icon-brand); color: var(--color-text-link); padding: 0 calc(var(--space-sm) - 0.5px); }
+.chip:has(input:checked) .icon { display: inline-block; }
+.chip:has(input:focus-visible) { box-shadow: var(--focus-ring); }
+.chip .count { color: var(--color-text-muted); font-weight: var(--font-weight-regular); }
+.chip:has(input:checked) .count { color: inherit; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+
+/* ---------- Provenance badge (Verified / Inferred / Not stated, 24px pill) ---------- */
+.prov {
+  display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: 24px; padding: 0 var(--space-xs);
+  border: 1px solid; border-radius: var(--radius-full); white-space: nowrap;
+  font-size: var(--font-size-label-sm); line-height: var(--line-height-label-sm); font-weight: var(--font-weight-medium);
+}
+.prov-verified { background: var(--color-status-verified-bg); color: var(--color-status-verified-fg); border-color: var(--color-status-verified-border); }
+.prov-inferred { background: var(--color-status-inferred-bg); color: var(--color-status-inferred-fg); border-color: var(--color-status-inferred-border); }
+.prov-unconfirmed { background: var(--color-status-unconfirmed-bg); color: var(--color-status-unconfirmed-fg); border-color: var(--color-status-unconfirmed-border); }
+
+/* ---------- Sponsorship chip (28px, radius 6) ---------- */
+.spons {
+  display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: 28px; padding: 0 var(--space-xs);
+  border: 1px solid; border-radius: var(--radius-sm); white-space: nowrap;
+  font-size: var(--font-size-label-sm); line-height: var(--line-height-label-sm); font-weight: var(--font-weight-medium);
+}
+.spons-offered { background: var(--color-status-verified-bg); color: var(--color-status-verified-fg); border-color: var(--color-status-verified-border); }
+.spons-not_offered { background: var(--color-status-danger-bg); color: var(--color-status-danger-fg); border-color: var(--color-status-danger-border); }
+.spons-right_to_work { background: var(--color-status-inferred-bg); color: var(--color-status-inferred-fg); border-color: var(--color-status-inferred-border); }
+.spons-unclear { background: var(--color-status-info-bg); color: var(--color-status-info-fg); border-color: var(--color-status-info-border); }
+.spons-unmentioned { background: var(--color-status-unconfirmed-bg); color: var(--color-status-unconfirmed-fg); border-color: var(--color-status-unconfirmed-border); }
+
+/* ---------- Checkbox and Radio (44px rows) ---------- */
+.check { display: flex; align-items: center; gap: var(--space-sm); min-height: var(--size-touch-target); cursor: pointer; font-size: var(--font-size-body); line-height: var(--line-height-body); color: var(--color-text-primary); }
+.check input {
+  appearance: none; flex: none; width: 20px; height: 20px; margin: 0; display: grid; place-content: center;
+  background: var(--color-bg-surface); border: var(--border-width-strong) solid var(--color-border-input); border-radius: var(--radius-sm); cursor: pointer;
+}
+.check input[type='radio'] { border-radius: 50%; }
+.check input:checked { background: var(--color-bg-brand); border: 1px solid var(--color-icon-brand); }
+.check input[type='checkbox']:checked::before {
+  content: ''; width: 14px; height: 14px;
+  background: var(--color-text-on-brand);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16.667 5 7.5 14.167 3.333 10'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.check input[type='radio']:checked { background: var(--color-bg-surface); border: var(--border-width-strong) solid var(--color-icon-brand); }
+.check input[type='radio']:checked::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--color-icon-brand); }
+.check input:focus-visible { box-shadow: var(--focus-ring); }
+
+/* ---------- Card surfaces ---------- */
+.card { background: var(--color-bg-surface); border: 1px solid var(--color-border-soft); border-radius: var(--radius-xl); box-shadow: var(--shadow-soft); }
+.card-pad { padding: var(--space-lg); }
+.divider { height: 1px; background: var(--color-border-subtle); border: 0; margin: 0; }
+
+/* ---------- Org logo (initials, Small 32 / Medium 40 / Large 56) ---------- */
+.org-logo {
+  display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: var(--radius-md);
+  background: var(--color-bg-brand-subtle); border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-link); font-size: 14px; font-weight: var(--font-weight-semibold); letter-spacing: 0.02em;
+}
+.org-logo-sm { width: 32px; height: 32px; border-radius: var(--radius-sm); font-size: 12px; }
+.org-logo-lg { width: 56px; height: 56px; border-radius: var(--radius-lg); font-size: 18px; }
+
+/* ---------- Soft blur background (Figma › Components › Backgrounds › Blur V1) ---------- */
+.blur-bg { position: relative; isolation: isolate; overflow: clip; }
+.blur-bg::before {
+  content: ''; position: absolute; z-index: -1; pointer-events: none;
+  width: var(--blur-w, 1100px); aspect-ratio: 1697 / 1449; left: var(--blur-x, 50%); top: var(--blur-y, 50%);
+  translate: -50% -50%; rotate: var(--blur-rotate, 0deg);
+  background: url('/blur.png') center / contain no-repeat; opacity: var(--blur-opacity, 0.6);
+}
