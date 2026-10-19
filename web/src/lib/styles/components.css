@@ -63,6 +63,7 @@
 .tag-brand { background: var(--color-bg-brand-subtle); color: var(--color-text-link); }
 .tag-outline { background: var(--color-bg-surface); box-shadow: inset 0 0 0 1px var(--color-border-default); }
 .tags { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+ul.tags, ol.tags { list-style: none; margin: 0; padding: 0; }
 
 /* ---------- Filter chip (checkbox or radio inside a label, 32px pill) ---------- */
 .chip {

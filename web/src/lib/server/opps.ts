@@ -70,6 +70,7 @@ export interface OppRow {
   changed_at: string | null;
   stale_reason: string | null;
   provenance: Record<string, { status: string; source: string; detail?: string }>;
+  ats_type?: string | null;
 }
 
 export interface Facet {
@@ -86,7 +87,7 @@ export async function searchOpps(f: OppFilters) {
     sql<OppRow[]>`
       select id, org_id, org_name, title, role_family, seniority, location_raw, city, work_mode, employment_type,
              salary_min, salary_max, salary_currency, salary_period, skills, apply_url, sponsorship_signal, sponsorship_snippet,
-             posted_at, first_seen_at, last_seen_at, changed_at, stale_reason, provenance
+             posted_at, first_seen_at, last_seen_at, changed_at, stale_reason, provenance, ats_type
       from opportunities_view where ${w}
       order by coalesce(posted_at, first_seen_at) desc, id desc
       limit ${OPP_PAGE_SIZE} offset ${(f.page - 1) * OPP_PAGE_SIZE}`,
@@ -115,4 +116,21 @@ export async function oppSummary() {
     select count(*)::int as live, count(distinct name_key)::int as orgs, max(last_seen_at)::text as last
     from opportunities where status = 'live'`;
   return r;
+}
+
+/** Live roles at one organisation (all its register entries share a name_key), newest first. */
+export async function orgRoles(nameKey: string, limit = 50) {
+  return sql<OppRow[]>`
+    select id, org_id, org_name, title, role_family, seniority, location_raw, city, work_mode, employment_type,
+           salary_min, salary_max, salary_currency, salary_period, skills, apply_url, sponsorship_signal, sponsorship_snippet,
+           posted_at, first_seen_at, last_seen_at, changed_at, stale_reason, provenance, ats_type
+    from opportunities_view where name_key = ${nameKey} and status = 'live'
+    order by coalesce(posted_at, first_seen_at) desc, id desc
+    limit ${limit}`;
+}
+
+/** When this organisation's job board was last checked. */
+export async function orgLastScan(nameKey: string) {
+  const [r] = await sql<{ at: string | null }[]>`select max(finished_at)::text as at from org_scans where name_key = ${nameKey} and ok`;
+  return r?.at ?? null;
 }
