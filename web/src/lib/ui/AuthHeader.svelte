@@ -10,7 +10,7 @@
 </header>
 
 <style>
-  .auth-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); padding: var(--space-md) max(var(--layout-gutter), calc((100% - var(--layout-content-max)) / 2)); border-bottom: 1px solid var(--color-border-subtle); background: var(--color-bg-surface); position: relative; z-index: 2; }
+  .auth-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); padding: var(--space-md) max(var(--layout-gutter), calc((100% - var(--layout-content-max)) / 2)); border-bottom: 1px solid var(--color-border-subtle); background: transparent; position: relative; z-index: 2; } /* no fill, as in Figma: the blur can show through */
   .home { border-radius: var(--radius-sm); }
   .short { display: none; }
   @media (max-width: 640px) {

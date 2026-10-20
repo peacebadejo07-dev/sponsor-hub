@@ -1,6 +1,8 @@
 /* Element defaults and text-style utilities built on tokens.css */
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
+/* Full-width blurs are 100vw; never let them add a sideways scroll. */
+body { overflow-x: clip; }
 body {
   margin: 0;
   background: var(--color-bg-surface);

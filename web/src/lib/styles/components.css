@@ -174,20 +174,28 @@ ul.tags, ol.tags { list-style: none; margin: 0; padding: 0; }
   mask-image: radial-gradient(circle at 0 0, #000 90px, transparent 236px);
 }
 
-/* ---------- Soft blur background (Figma › Components › Backgrounds › Blur V1; markup in BlurBg.svelte) ---------- */
-.blur-bg { position: relative; isolation: isolate; overflow: clip; }
-.blur-bg > .blur {
-  position: absolute; z-index: -1; pointer-events: none;
-  width: var(--blur-w, 1100px); aspect-ratio: 1692 / 1441; left: var(--blur-x, 50%); top: var(--blur-y, 50%);
-  translate: -50% -50%; rotate: var(--blur-rotate, 0deg);
-  opacity: calc(var(--blur-opacity, 0.6) * 0.7); /* Blur V1 sits at 70% in Figma */
-}
-.blob { position: absolute; inset: 0; background: center / contain no-repeat; animation: blob-in var(--duration-entrance) var(--ease-entrance) both; }
-.blob-light-green { background-image: url('/blob-light-green.webp'); --blob-from: -40px 24px; }
-.blob-amber { background-image: url('/blob-amber.webp'); --blob-from: 40px -24px; }
-.blob-green { background-image: url('/blob-green.webp'); --blob-from: 40px -24px; animation-delay: 150ms; }
+/* ---------- Soft blur background (Figma › Backgrounds › Blur V1; layers in BlurBg.svelte) ---------- */
+.blur-bg { position: relative; isolation: isolate; }
+.blur { position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit; }
+/* Full-page blurs run the width of the screen, as in Figma, not just the content column. */
+.blur.bleed { left: 50%; right: auto; width: 100vw; translate: -50% 0; border-radius: 0; }
+.blur .clip { position: absolute; inset: var(--blur-clip-top, 0px) 0 0; overflow: hidden; border-radius: inherit; }
+.blur .fill { position: absolute; inset: 0; }
+.blur .frame { position: absolute; width: 0; height: 0; }
+.blur .layer { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.blur .mob { display: none; }
+@media (max-width: 640px) { .blur:not(.bp960) .desk { display: none; } .blur:not(.bp960) .mob { display: block; } }
+@media (max-width: 960px) { .blur.bp960 .desk { display: none; } .blur.bp960 .mob { display: block; } }
+/* Blur entrance (🎞 Motion): offsets are Figma's ±40/24px on the 1177×1495 component, as fractions of the layer. */
+.blob { position: absolute; inset: 0; background: center / 100% 100% no-repeat; animation: blob-in var(--duration-entrance) var(--ease-entrance) both; }
+.blob-light-green { background-image: url('/blob-light-green.webp'); --blob-from: -3.4% 1.6%; }
+.blob-amber { background-image: url('/blob-amber.webp'); --blob-from: 3.4% -1.6%; }
+.blob-green { background-image: url('/blob-green.webp'); --blob-from: 3.4% -1.6%; animation-delay: 150ms; }
 /* Once per visit: app.html marks the page after the first entrance. */
 .blur-seen .blob { animation: none; }
+/* CountUp: hide the final figure until the count is ready to start, so it doesn't flash. */
+.js .countup:not(.ready) > [aria-hidden] { visibility: hidden; animation: countup-fallback 0s 2s forwards; } /* shown anyway if the app never starts */
+@keyframes countup-fallback { to { visibility: visible; } }
 /* Cards that appear after an action (Check your email) rise in gently. */
 @keyframes rise-in { from { opacity: 0; translate: 0 8px; } }
 .rise { animation: rise-in var(--duration-slow) var(--ease-out) both; }

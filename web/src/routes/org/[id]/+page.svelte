@@ -86,7 +86,7 @@
 <a class="back t-label" href="/organisations"><Icon name="chevron-left" size={16} />All organisations</a>
 
 <article class="hero card">
-  <div class="cover blur-bg" aria-hidden="true"><BlurBg /></div>
+  <div class="cover blur-bg" aria-hidden="true"><BlurBg preset="cover" /></div>
   <div class="hero-body">
     <div class="logo-wrap"><OrgLogo {name} size="lg" /></div>
     <div class="title-row">
@@ -249,7 +249,7 @@
   .back:hover { color: var(--color-text-primary); }
 
   .hero { overflow: hidden; }
-  .cover { height: 128px; background: var(--color-bg-page); --blur-w: 1200px; --blur-x: 50%; --blur-y: 40%; --blur-opacity: 0.55; }
+  .cover { height: 128px; background: var(--color-bg-page); }
   .hero-body { display: grid; gap: var(--space-md); padding: 0 var(--space-xl); margin-top: -36px; position: relative; }
   .logo-wrap { width: fit-content; padding: 4px; background: var(--color-bg-surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); }
   .title-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-lg); flex-wrap: wrap; }

@@ -6,7 +6,7 @@
 
 <svelte:head><title>{notFound ? 'Page not found' : 'Something went wrong'} · Sponsor Hub</title><meta name="robots" content="noindex" /></svelte:head>
 
-<div class="stage blur-bg"><BlurBg />
+<div class="stage blur-bg"><BlurBg preset="notFound" />
   <p class="t-overline t-muted code">Error {page.status}</p>
   <section class="box card" aria-labelledby="err-h">
     <span class="tile" aria-hidden="true">
@@ -27,11 +27,11 @@
 </div>
 
 <style>
-  .stage { display: grid; justify-items: center; gap: var(--space-md); padding: var(--space-4xl) 0 calc(var(--space-6xl) + var(--page-pad-end, 0px)); margin-bottom: calc(-1 * var(--page-pad-end, 0px)); --blur-w: 1400px; --blur-rotate: 93deg; --blur-x: 40%; --blur-y: 56%; }
+  .stage { --blur-clip-top: calc(-1 * var(--page-pad-start, 0px)); display: grid; justify-items: center; gap: var(--space-md); /* Figma: 137px from the top of main to the label, and from the card to the footer */ padding: calc(137px - var(--page-pad-start, 0px)) 0 calc(137px + var(--page-pad-end, 0px)); margin-bottom: calc(-1 * var(--page-pad-end, 0px)); }
   .code { margin: 0; }
   .box { display: grid; justify-items: center; text-align: center; gap: var(--space-lg); width: min(100%, 640px); padding: var(--space-3xl) var(--space-xl); }
   .box p { margin: 0; max-width: 480px; }
   .tile { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; background: var(--color-bg-surface); border: 1px solid var(--color-border-subtle); box-shadow: var(--shadow-sm); color: var(--color-text-link); }
   .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-sm); }
-  @media (max-width: 640px) { .stage { padding-top: var(--space-xl); padding-bottom: calc(280px + var(--page-pad-end, 0px)); --blur-w: 1000px; --blur-x: 60%; --blur-y: 80%; } .box { padding: var(--space-xl) var(--space-lg); } }
+  @media (max-width: 640px) { .stage { padding-top: calc(64px - var(--page-pad-start, 0px)); padding-bottom: calc(312px + var(--page-pad-end, 0px)); } .box { padding: var(--space-xl) var(--space-lg); } }
 </style>

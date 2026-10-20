@@ -7,7 +7,7 @@
 
 <svelte:head><title>Sign in · Sponsor Hub</title><meta name="robots" content="noindex" /></svelte:head>
 
-<div class="stage blur-bg"><BlurBg />
+<div class="stage blur-bg"><BlurBg preset="signin" />
   <section class="box card" aria-labelledby="verify-h">
     <span class="tile" aria-hidden="true"><Icon name={broken ? 'alert' : 'check-circle'} size={28} /></span>
     {#if broken}
@@ -24,7 +24,7 @@
 </div>
 
 <style>
-  .stage { flex: 1; display: grid; place-items: center; padding: var(--space-6xl) var(--space-md); --blur-w: 1500px; --blur-rotate: 93deg; --blur-x: 38%; --blur-y: 54%; }
+  .stage { flex: 1; display: grid; place-items: center; padding: var(--space-6xl) var(--space-md); }
   .box { display: grid; justify-items: center; text-align: center; gap: var(--space-lg); width: min(100%, 560px); padding: var(--space-3xl); }
   .box p { margin: 0; }
   .who { color: var(--color-text-primary); }

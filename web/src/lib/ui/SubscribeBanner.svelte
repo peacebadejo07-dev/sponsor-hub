@@ -9,7 +9,7 @@
   let { loggedIn = false }: { loggedIn?: boolean } = $props();
 </script>
 
-<section class="banner card blur-bg" aria-labelledby="subscribe-title"><BlurBg />
+<section class="banner card blur-bg" aria-labelledby="subscribe-title"><BlurBg preset="subscribe" />
   <span class="mail" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28"><rect x="3" y="6" width="22" height="16" rx="3" fill="#A8D5B5" /><path d="M3 9c0-1.7 1.3-3 3-3h16c1.7 0 3 1.3 3 3l-9.2 5.5a3.4 3.4 0 0 1-3.6 0L3 9Z" fill="#1B7D3E" /></svg></span>
   <h2 id="subscribe-title" class="t-heading-3">Get roles that fit you, every week</h2>
   <p class="t-body t-secondary">New tech roles at UK visa sponsors that match your profile. Free, one click to stop.</p>
@@ -27,7 +27,7 @@
 </section>
 
 <style>
-  .banner { --blur-w: 1100px; --blur-x: 50%; --blur-y: 55%; --blur-opacity: 0.35; display: grid; justify-items: center; text-align: center; gap: var(--space-md); padding: var(--space-3xl) var(--space-xl); background: var(--color-bg-subtle); }
+  .banner { display: grid; justify-items: center; text-align: center; gap: var(--space-md); padding: var(--space-3xl) var(--space-xl); background: var(--color-bg-subtle); }
   .mail { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; background: var(--color-bg-surface); border: 1px solid var(--color-border-subtle); box-shadow: var(--shadow-sm); }
   h2 { max-width: 440px; }
   p { margin: 0; max-width: 380px; }

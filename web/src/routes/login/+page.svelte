@@ -1,14 +1,14 @@
 <script lang="ts">
   import BlurBg from '$lib/ui/BlurBg.svelte';
   import Icon from '$lib/ui/Icon.svelte';
+  import CountUp from '$lib/ui/CountUp.svelte';
   let { data, form } = $props();
-  const fmt = (n: number) => n.toLocaleString('en-GB');
 </script>
 
 <svelte:head><title>{form?.sent ? 'Check your email' : 'Sign in'} · Sponsor Hub</title><meta name="robots" content="noindex" /></svelte:head>
 
 {#if form?.sent}
-  <div class="stage blur-bg confirm-stage"><BlurBg />
+  <div class="stage blur-bg confirm-stage"><BlurBg preset="checkEmail" />
     <section class="confirm card rise" aria-labelledby="confirm-h">
       <span class="tile" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28"><rect x="3" y="6" width="22" height="16" rx="3" fill="#A8D5B5" /><path d="M3 9c0-1.7 1.3-3 3-3h16c1.7 0 3 1.3 3 3l-9.2 5.5a3.4 3.4 0 0 1-3.6 0L3 9Z" fill="#1B7D3E" /></svg></span>
       <h1 id="confirm-h" class="t-heading-2" tabindex="-1">Check your email</h1>
@@ -25,7 +25,7 @@
     </section>
   </div>
 {:else}
-  <div class="stage blur-bg"><BlurBg />
+  <div class="stage blur-bg"><BlurBg preset="signin" />
     <div class="split">
       <section class="signin card" aria-labelledby="signin-h">
         <div class="head">
@@ -52,10 +52,10 @@
           <p class="t-body t-secondary">Every employer here holds a Home Office sponsor licence. We check their job boards every day.</p>
         </div>
         <dl class="stats">
-          <div class="card"><dt>live tech roles</dt><dd class="t-stat">{fmt(data.stats.live)}</dd></div>
-          <div class="card"><dt>sponsors hiring now</dt><dd class="t-stat">{fmt(data.stats.hiring)}</dd></div>
-          <div class="card"><dt>register entries checked</dt><dd class="t-stat">{fmt(data.stats.register)}</dd></div>
-          <div class="card"><dt>job board checks</dt><dd class="t-stat">Daily</dd></div>
+          <div><dt>live tech<br />roles</dt><dd class="t-stat"><CountUp value={data.stats.live} /></dd></div>
+          <div><dt>sponsors<br />hiring now</dt><dd class="t-stat"><CountUp value={data.stats.hiring} /></dd></div>
+          <div><dt>register entries<br />checked</dt><dd class="t-stat"><CountUp value={data.stats.register} /></dd></div>
+          <div><dt>job board<br />checks</dt><dd class="t-stat">Daily</dd></div>
         </dl>
       </section>
     </div>
@@ -63,7 +63,7 @@
 {/if}
 
 <style>
-  .stage { flex: 1; display: grid; align-items: center; padding: var(--space-4xl) max(var(--layout-gutter), calc((100% - var(--layout-focus-max)) / 2)); --blur-w: 1500px; --blur-rotate: 93deg; --blur-x: 58%; --blur-y: 62%; --blur-opacity: 0.6; }
+  .stage { flex: 1; display: grid; align-items: center; padding: var(--space-4xl) max(var(--layout-gutter), calc((100% - var(--layout-focus-max)) / 2)); }
   .split { display: grid; grid-template-columns: minmax(0, 500px) minmax(0, 425px); justify-content: space-between; align-items: center; gap: var(--space-3xl); }
   .signin { display: grid; gap: var(--space-lg); padding: var(--space-2xl); }
   .head { display: grid; gap: var(--space-xs); }
@@ -73,12 +73,13 @@
   .why { display: grid; gap: var(--space-lg); }
   .why-head { display: grid; gap: var(--space-xs); }
   .why-head p { margin: 0; }
-  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-md); margin: 0; }
-  .stats div { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: var(--space-2xs); padding: var(--space-lg); }
-  .stats dt { font-size: var(--font-size-body-sm); line-height: var(--line-height-body-sm); color: var(--color-text-secondary); }
-  .stats dd { margin: 0; color: var(--color-text-secondary); }
+  /* Figma › why panel › stats: plain figures, no cards; 2 × 2, labels on two lines */
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--space-md); row-gap: var(--space-md); max-width: 336px; margin: 0; color: var(--color-text-secondary); }
+  .stats div { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: var(--space-2xs); padding: var(--space-lg) 0; }
+  .stats dt { font-size: var(--font-size-label-sm); line-height: var(--line-height-label-sm); font-weight: var(--font-weight-medium); }
+  .stats dd { margin: 0; }
 
-  .confirm-stage { --blur-w: 1500px; --blur-rotate: 93deg; --blur-x: 38%; --blur-y: 54%; justify-items: center; }
+  .confirm-stage { justify-items: center; }
   .confirm { display: grid; justify-items: center; text-align: center; gap: var(--space-lg); width: min(100%, 560px); padding: var(--space-3xl); }
   .confirm h1:focus { outline: none; }
   .confirm p { margin: 0; }
@@ -89,13 +90,11 @@
   .confirm-actions form { display: block; }
 
   @media (max-width: 960px) {
-    .stage { align-items: start; padding-top: var(--space-lg); padding-bottom: 240px; --blur-w: 1000px; --blur-x: 62%; --blur-y: 86%; }
+    .stage { align-items: start; padding-top: var(--space-lg); padding-bottom: 240px; }
     .split { grid-template-columns: minmax(0, 1fr); gap: var(--space-3xl); }
     .signin { padding: var(--space-lg); }
     .why { padding: var(--space-xl) 4px 0; }
-    .stats { gap: var(--space-sm); }
-    .stats div { padding: var(--space-md); }
-    .confirm-stage { align-items: start; padding-top: var(--space-6xl); padding-bottom: var(--space-6xl); --blur-y: 78%; --blur-x: 55%; }
+    .confirm-stage { align-items: start; padding-top: var(--space-6xl); padding-bottom: var(--space-6xl); }
     .confirm { padding: var(--space-xl) var(--space-lg); }
     .confirm-actions { flex-direction: column; width: 100%; }
     .confirm-actions > * { width: 100%; }

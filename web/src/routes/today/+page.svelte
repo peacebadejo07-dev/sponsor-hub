@@ -58,7 +58,7 @@
         {/if}
       </section>
     {:else}
-      <section class="prompt card blur-bg" aria-labelledby="prompt-h"><BlurBg />
+      <section class="prompt card blur-bg" aria-labelledby="prompt-h"><BlurBg preset="today" />
         <h2 id="prompt-h" class="t-heading-4">See what changed for you</h2>
         <p class="t-body-sm t-secondary">Sign in to see new roles ranked for you, new roles at organisations you follow, and changes to roles you've saved.</p>
         <a class="btn btn-primary" href="/login?next=%2Ftoday">Sign in</a>
@@ -113,7 +113,7 @@
   .n { color: var(--color-text-muted); font-weight: var(--font-weight-regular); font-size: var(--font-size-body); }
   .list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-md); }
   .quiet { margin: 0; padding: var(--space-md); background: var(--color-bg-page); border-radius: var(--radius-md); }
-  .prompt { display: grid; gap: var(--space-md); justify-items: start; padding: 28px; background: var(--color-bg-page); --blur-w: 1000px; --blur-x: 75%; --blur-y: 40%; --blur-opacity: 0.45; }
+  .prompt { display: grid; gap: var(--space-md); justify-items: start; padding: 28px; background: var(--color-bg-page); }
   .prompt p { margin: 0; max-width: 520px; }
   .aside { position: sticky; top: 96px; }
   .side { display: grid; gap: 14px; padding: var(--space-lg); }
