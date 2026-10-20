@@ -2,19 +2,14 @@
   import { RATING_LABELS, RATING_HELP, GBM_PREFIX, routeShort } from '$lib/labels';
   import Icon from '$lib/ui/Icon.svelte';
   import Combobox from '$lib/ui/Combobox.svelte';
+  import FilterPanel from '$lib/ui/FilterPanel.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import OrgCard from '$lib/ui/OrgCard.svelte';
   import SubscribeBanner from '$lib/ui/SubscribeBanner.svelte';
   import ProfileBanner from '$lib/ui/ProfileBanner.svelte';
   import { SECTOR_TAGS } from '@sponsored/core';
-  import { onMount } from 'svelte';
-  import { page } from '$app/state';
+  import { page, navigating } from '$app/state';
   let { data } = $props();
-  // Open on desktop; on smaller screens start collapsed so results are visible.
-  let filtersOpen = $state(true);
-  onMount(() => {
-    if (window.innerWidth < 1024) filtersOpen = false;
-  });
 
   const f = $derived(data.filters);
   const activeCount = $derived(f.sectors.length + f.routes.length + f.ratings.length + (f.hasCareers ? 1 : 0) + (f.town ? 1 : 0) + (f.q ? 1 : 0));
@@ -37,6 +32,7 @@
     SECTOR_TAGS.filter((t) => (sectorFacets.get(t) ?? 0) > 0 || f.sectors.includes(t))
   );
   const fmt = (n: number) => n.toLocaleString('en-GB');
+  const loading = $derived(navigating.to?.url.pathname === '/organisations');
 
   // Sponsorship routes: Skilled Worker, the Global Business Mobility group, then
   // the rest by size. The smaller ones wait behind "Show all" unless chosen.
@@ -88,68 +84,58 @@
 </search>
 
 <div class="layout">
-  <details class="filters card" bind:open={filtersOpen}>
-    <summary class="btn btn-secondary btn-sm"><Icon name="filter" size={16} />Filters{#if activeCount}{' '}({activeCount}){/if}</summary>
-    <div class="filters-body">
-      <div class="filters-head">
-        <h2 class="t-heading-4">Filters{#if activeCount}{' '}({activeCount}){/if}</h2>
-        {#if activeCount}<a href="/organisations" class="btn btn-ghost btn-sm">Clear all</a>{/if}
+  <FilterPanel formId="org-filters" {activeCount} clearHref="/organisations">
+    <fieldset>
+      <legend class="t-overline">Website <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
+      <p class="t-caption t-secondary hint">Websites are found automatically for a growing shortlist, starting with tech organisations.</p>
+      <div class="chips"><label class="chip"><input form="org-filters" type="checkbox" name="careers" value="1" checked={f.hasCareers} /><Icon name="check" size={16} />Has a careers page</label></div>
+    </fieldset>
+
+    <fieldset>
+      <legend class="t-overline">Sector <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
+      <p class="t-caption t-secondary hint">From Companies House codes, the organisation's website or its roles. Many organisations are untagged.</p>
+      <div class="chips">
+        {#each sectorOptions as t (t)}
+          <label class="chip"><input form="org-filters" type="checkbox" name="sector" value={t} checked={f.sectors.includes(t)} /><Icon name="check" size={16} />{data.sectorLabels[t]} <span class="count">· {fmt(sectorFacets.get(t) ?? 0)}</span></label>
+        {/each}
       </div>
+    </fieldset>
 
-      <fieldset>
-        <legend class="t-overline">Website <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
-        <p class="t-caption t-secondary hint">Websites are found automatically for a growing shortlist, starting with tech organisations.</p>
-        <div class="chips"><label class="chip"><input form="org-filters" type="checkbox" name="careers" value="1" checked={f.hasCareers} /><Icon name="check" size={16} />Has a careers page</label></div>
-      </fieldset>
-
-      <fieldset>
-        <legend class="t-overline">Sector <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
-        <p class="t-caption t-secondary hint">From Companies House codes, the organisation's website or its roles. Many organisations are untagged.</p>
-        <div class="chips">
-          {#each sectorOptions as t (t)}
-            <label class="chip"><input form="org-filters" type="checkbox" name="sector" value={t} checked={f.sectors.includes(t)} /><Icon name="check" size={16} />{data.sectorLabels[t]} <span class="count">· {fmt(sectorFacets.get(t) ?? 0)}</span></label>
-          {/each}
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend class="t-overline">Sponsorship route <span class="prov prov-verified"><Icon name="check-circle" size={14} />Verified</span></legend>
-        {#snippet routeOpt(r: { value: string; count: number; more: boolean }, nested: boolean)}
-          <label class="opt" class:opt-nested={nested} class:more={r.more} hidden={r.more && !allRoutes} title={r.value}>
-            <input form="org-filters" type="checkbox" name="route" value={r.value} checked={f.routes.includes(r.value)} aria-label={`${r.value}, ${fmt(r.count)}`} />
-            <span class="opt-label">{routeShort(r.value)}</span><span class="opt-count">{fmt(r.count)}</span>
-          </label>
-        {/snippet}
-        <div class="opts">
-          {#each routeGroups.first as r (r.value)}{@render routeOpt(r, false)}{/each}
-          {#if routeGroups.gbm.length}
-            <p class="opt-group" aria-hidden="true">Global Business Mobility</p>
-            {#each routeGroups.gbm as r (r.value)}{@render routeOpt(r, true)}{/each}
-          {/if}
-          {#each routeGroups.rest as r (r.value)}{@render routeOpt(r, false)}{/each}
-        </div>
-        {#if hiddenRoutes}
-          <button type="button" class="btn btn-ghost btn-sm show-all" aria-expanded={allRoutes} onclick={() => (allRoutes = !allRoutes)}>
-            {allRoutes ? 'Show fewer routes' : `Show all ${data.routeFacets.length} routes`}<Icon name="chevron-down" size={16} class={allRoutes ? 'flip' : ''} />
-          </button>
+    <fieldset>
+      <legend class="t-overline">Sponsorship route <span class="prov prov-verified"><Icon name="check-circle" size={14} />Verified</span></legend>
+      {#snippet routeOpt(r: { value: string; count: number; more: boolean }, nested: boolean)}
+        <label class="opt" class:opt-nested={nested} class:more={r.more} hidden={r.more && !allRoutes} title={r.value}>
+          <input form="org-filters" type="checkbox" name="route" value={r.value} checked={f.routes.includes(r.value)} aria-label={`${r.value}, ${fmt(r.count)}`} />
+          <span class="opt-label">{routeShort(r.value)}</span><span class="opt-count">{fmt(r.count)}</span>
+        </label>
+      {/snippet}
+      <div class="opts">
+        {#each routeGroups.first as r (r.value)}{@render routeOpt(r, false)}{/each}
+        {#if routeGroups.gbm.length}
+          <p class="opt-group" aria-hidden="true">Global Business Mobility</p>
+          {#each routeGroups.gbm as r (r.value)}{@render routeOpt(r, true)}{/each}
         {/if}
-      </fieldset>
+        {#each routeGroups.rest as r (r.value)}{@render routeOpt(r, false)}{/each}
+      </div>
+      {#if hiddenRoutes}
+        <button type="button" class="btn btn-ghost btn-sm show-all" aria-expanded={allRoutes} onclick={() => (allRoutes = !allRoutes)}>
+          {allRoutes ? 'Show fewer routes' : `Show all ${data.routeFacets.length} routes`}<Icon name="chevron-down" size={16} class={allRoutes ? 'flip' : ''} />
+        </button>
+      {/if}
+    </fieldset>
 
-      <fieldset>
-        <legend class="t-overline">Rating <span class="prov prov-verified"><Icon name="check-circle" size={14} />Verified</span></legend>
-        <div class="chips">
-          {#each data.ratingFacets as r (r.value)}
-            <label class="chip" title={RATING_HELP[r.value] ?? ''}><input form="org-filters" type="checkbox" name="rating" value={r.value} checked={f.ratings.includes(r.value)} /><Icon name="check" size={16} />{RATING_LABELS[r.value] ?? r.value} <span class="count">· {fmt(r.count)}</span></label>
-          {/each}
-        </div>
-      </fieldset>
+    <fieldset>
+      <legend class="t-overline">Rating <span class="prov prov-verified"><Icon name="check-circle" size={14} />Verified</span></legend>
+      <div class="chips">
+        {#each data.ratingFacets as r (r.value)}
+          <label class="chip" title={RATING_HELP[r.value] ?? ''}><input form="org-filters" type="checkbox" name="rating" value={r.value} checked={f.ratings.includes(r.value)} /><Icon name="check" size={16} />{RATING_LABELS[r.value] ?? r.value} <span class="count">· {fmt(r.count)}</span></label>
+        {/each}
+      </div>
+    </fieldset>
+  </FilterPanel>
 
-      <button type="submit" form="org-filters" class="btn btn-primary btn-block">Apply filters</button>
-    </div>
-  </details>
-
-  <section class="results" aria-labelledby="org-count">
-    <p id="org-count" class="t-label" role="status">{#if data.orgs.length}Showing {fmt(first)}–{fmt(last)} of {fmt(data.total)} organisations{:else}No organisations match{/if}</p>
+  <section class="results" aria-labelledby="org-count" aria-busy={loading}>
+    <p id="org-count" class="t-label" role="status">{#if loading}Loading organisations…{:else if data.orgs.length}Showing {fmt(first)}–{fmt(last)} of {fmt(data.total)} organisations{:else}No organisations match{/if}</p>
     {#if data.orgs.length === 0}
       <EmptyState icon="building" title="No organisations match these filters" body="Try removing a filter or searching a shorter name.">
         <a class="btn btn-primary" href="/organisations">Clear all filters</a>
@@ -180,10 +166,6 @@
   .page-head p { margin: 0; }
   .search { display: grid; grid-template-columns: 1fr 1fr auto; gap: var(--space-md); align-items: end; padding: var(--space-lg); margin-bottom: var(--space-xl); }
   .layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--space-xl); align-items: start; }
-  .filters { padding: var(--space-lg); position: sticky; top: 96px; max-height: calc(100vh - 112px); overflow: auto; }
-  .filters > summary { display: none; }
-  .filters-body { display: grid; gap: var(--space-lg); }
-  .filters-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-xs); }
   fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: var(--space-sm); min-width: 0; }
   legend { display: flex; align-items: center; gap: var(--space-xs); padding: 0; margin-bottom: var(--space-sm); color: var(--color-text-secondary); }
   legend .prov { text-transform: none; letter-spacing: 0; }
@@ -193,17 +175,14 @@
   .show-all :global(.flip) { rotate: 180deg; }
   .results { display: grid; gap: var(--space-md); min-width: 0; }
   .results > p { margin: 0; }
+  .results > :global(:not(p)) { transition: opacity var(--duration-base) var(--ease-out); }
+  .results[aria-busy='true'] > :global(:not(p)) { opacity: 0.55; }
   .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: var(--space-md); }
   .pager { display: flex; justify-content: space-between; align-items: center; gap: var(--space-sm); }
   .banners { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-lg); margin-top: var(--space-4xl); }
   @media (max-width: 1023px) {
     .layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
-    .filters { position: static; max-height: none; overflow: visible; padding: 0; background: none; border: 0; box-shadow: none; }
-    .filters > summary { display: inline-flex; list-style: none; }
-    .filters > summary::-webkit-details-marker { display: none; }
-    .filters[open] > summary { margin-bottom: var(--space-md); }
-    .filters-body { padding: var(--space-lg); background: var(--color-bg-surface); border: 1px solid var(--color-border-soft); border-radius: var(--radius-xl); box-shadow: var(--shadow-soft); }
-    .banners { grid-template-columns: minmax(0, 1fr); margin-top: var(--space-2xl); }
+        .banners { grid-template-columns: minmax(0, 1fr); margin-top: var(--space-2xl); }
   }
   @media (max-width: 640px) {
     .page-head { margin-bottom: var(--space-lg); }

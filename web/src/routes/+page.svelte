@@ -4,19 +4,13 @@
   import OppCard from '$lib/OppCard.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   import Combobox from '$lib/ui/Combobox.svelte';
+  import FilterPanel from '$lib/ui/FilterPanel.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import SubscribeBanner from '$lib/ui/SubscribeBanner.svelte';
   import ProfileBanner from '$lib/ui/ProfileBanner.svelte';
   import { navigating } from '$app/state';
   import { ago } from '$lib/labels';
-  import { onMount } from 'svelte';
   let { data } = $props();
-  // Open on desktop; on smaller screens start collapsed so results are visible.
-  let filtersOpen = $state(true);
-  onMount(() => {
-    // Active filters are listed above the results, so the panel can start closed.
-    if (window.innerWidth < 1024) filtersOpen = false;
-  });
 
   const f = $derived(data.filters);
   const fmt = (n: number) => n.toLocaleString('en-GB');
@@ -93,89 +87,79 @@
 </search>
 
 <div class="layout">
-  <details class="filters card" bind:open={filtersOpen}>
-    <summary class="btn btn-secondary btn-sm"><Icon name="filter" size={16} />Filters{#if activeCount}{' '}({activeCount}){/if}</summary>
-    <div class="filters-body">
-      <div class="filters-head">
-        <h2 class="t-heading-4">Filters{#if activeCount}{' '}({activeCount}){/if}</h2>
-        {#if activeCount}<a href="/" class="btn btn-ghost btn-sm">Clear all</a>{/if}
+  <FilterPanel formId="opp-filters" {activeCount} clearHref="/">
+    <fieldset>
+      <legend class="t-overline">Role type <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
+      <p class="t-caption t-secondary hint">Worked out from the job title.</p>
+      <div class="chips">
+        {#each familyOptions as v (v)}
+          <label class="chip"><input form="opp-filters" type="checkbox" name="family" value={v} checked={f.families.includes(v)} /><Icon name="check" size={16} />{FAMILY_SHORT[v]} <span class="count">· {fmt(fam.get(v) ?? 0)}</span></label>
+        {/each}
       </div>
+    </fieldset>
 
+    <fieldset>
+      <legend class="t-overline">Where you work</legend>
+      <p class="t-caption t-secondary hint">Roles that don't say are hidden when you pick one.</p>
+      <div class="chips">
+        {#each ['remote', 'hybrid', 'onsite'] as v (v)}
+          <label class="chip"><input form="opp-filters" type="checkbox" name="mode" value={v} checked={f.modes.includes(v)} /><Icon name="check" size={16} />{WORK[v]} <span class="count">· {fmt((mode.get(v) ?? 0) + (mode.get('flexible') ?? 0))}</span></label>
+        {/each}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend class="t-overline">Level <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
+      <div class="chips">
+        {#each ['entry', 'mid', 'senior', 'lead', 'principal', 'executive'] as v (v)}
+          {#if (lvl.get(v) ?? 0) > 0 || f.seniority.includes(v)}
+            <label class="chip"><input form="opp-filters" type="checkbox" name="level" value={v} checked={f.seniority.includes(v)} /><Icon name="check" size={16} />{LEVEL_SHORT[v]} <span class="count">· {fmt(lvl.get(v) ?? 0)}</span></label>
+          {/if}
+        {/each}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend class="t-overline">Sponsorship in the advert</legend>
+      <p class="t-caption t-secondary hint">Every employer here is on the register. This filters by the job advert's own wording.</p>
+      <div class="chips">
+        {#each ['offered', 'unmentioned', 'right_to_work', 'not_offered', 'unclear'] as v (v)}
+          <label class="chip"><input form="opp-filters" type="checkbox" name="sponsor" value={v} checked={f.sponsorship.includes(v)} /><Icon name="check" size={16} />{SPONSOR[v]} <span class="count">· {fmt(sp.get(v) ?? 0)}</span></label>
+        {/each}
+      </div>
+    </fieldset>
+
+    {#if empOptions.length}
       <fieldset>
-        <legend class="t-overline">Role type <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
-        <p class="t-caption t-secondary hint">Worked out from the job title.</p>
+        <legend class="t-overline">Employment</legend>
         <div class="chips">
-          {#each familyOptions as v (v)}
-            <label class="chip"><input form="opp-filters" type="checkbox" name="family" value={v} checked={f.families.includes(v)} /><Icon name="check" size={16} />{FAMILY_SHORT[v]} <span class="count">· {fmt(fam.get(v) ?? 0)}</span></label>
+          {#each empOptions as v (v)}
+            <label class="chip"><input form="opp-filters" type="checkbox" name="emp" value={v} checked={f.employment.includes(v)} /><Icon name="check" size={16} />{EMP[v]} <span class="count">· {fmt(emp.get(v) ?? 0)}</span></label>
           {/each}
         </div>
       </fieldset>
+    {/if}
 
-      <fieldset>
-        <legend class="t-overline">Where you work</legend>
-        <p class="t-caption t-secondary hint">Roles that don't say are hidden when you pick one.</p>
-        <div class="chips">
-          {#each ['remote', 'hybrid', 'onsite'] as v (v)}
-            <label class="chip"><input form="opp-filters" type="checkbox" name="mode" value={v} checked={f.modes.includes(v)} /><Icon name="check" size={16} />{WORK[v]} <span class="count">· {fmt((mode.get(v) ?? 0) + (mode.get('flexible') ?? 0))}</span></label>
-          {/each}
+    <fieldset>
+      <legend class="t-overline">Freshness and pay</legend>
+      <div class="field">
+        <label class="field-label" for="since">New or updated</label>
+        <div class="control">
+          <select id="since" form="opp-filters" name="since">
+            <option value="0" selected={!f.since}>Any time</option>
+            <option value="7" selected={f.since === 7}>Last 7 days</option>
+            <option value="14" selected={f.since === 14}>Last 14 days</option>
+            <option value="30" selected={f.since === 30}>Last 30 days</option>
+          </select>
+          <Icon name="chevron-down" class="chev" />
         </div>
-      </fieldset>
-
-      <fieldset>
-        <legend class="t-overline">Level <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
-        <div class="chips">
-          {#each ['entry', 'mid', 'senior', 'lead', 'principal', 'executive'] as v (v)}
-            {#if (lvl.get(v) ?? 0) > 0 || f.seniority.includes(v)}
-              <label class="chip"><input form="opp-filters" type="checkbox" name="level" value={v} checked={f.seniority.includes(v)} /><Icon name="check" size={16} />{LEVEL_SHORT[v]} <span class="count">· {fmt(lvl.get(v) ?? 0)}</span></label>
-            {/if}
-          {/each}
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend class="t-overline">Sponsorship in the advert</legend>
-        <p class="t-caption t-secondary hint">Every employer here is on the register. This filters by the job advert's own wording.</p>
-        <div class="chips">
-          {#each ['offered', 'unmentioned', 'right_to_work', 'not_offered', 'unclear'] as v (v)}
-            <label class="chip"><input form="opp-filters" type="checkbox" name="sponsor" value={v} checked={f.sponsorship.includes(v)} /><Icon name="check" size={16} />{SPONSOR[v]} <span class="count">· {fmt(sp.get(v) ?? 0)}</span></label>
-          {/each}
-        </div>
-      </fieldset>
-
-      {#if empOptions.length}
-        <fieldset>
-          <legend class="t-overline">Employment</legend>
-          <div class="chips">
-            {#each empOptions as v (v)}
-              <label class="chip"><input form="opp-filters" type="checkbox" name="emp" value={v} checked={f.employment.includes(v)} /><Icon name="check" size={16} />{EMP[v]} <span class="count">· {fmt(emp.get(v) ?? 0)}</span></label>
-            {/each}
-          </div>
-        </fieldset>
-      {/if}
-
-      <fieldset>
-        <legend class="t-overline">Freshness and pay</legend>
-        <div class="field">
-          <label class="field-label" for="since">New or updated</label>
-          <div class="control">
-            <select id="since" form="opp-filters" name="since">
-              <option value="0" selected={!f.since}>Any time</option>
-              <option value="7" selected={f.since === 7}>Last 7 days</option>
-              <option value="14" selected={f.since === 14}>Last 14 days</option>
-              <option value="30" selected={f.since === 30}>Last 30 days</option>
-            </select>
-            <Icon name="chevron-down" class="chev" />
-          </div>
-        </div>
-        <div class="chips">
-          <label class="chip"><input form="opp-filters" type="checkbox" name="salary" value="1" checked={f.hasSalary} /><Icon name="check" size={16} />Shows a salary</label>
-          <label class="chip"><input form="opp-filters" type="checkbox" name="fresh" value="1" checked={f.hideStale} /><Icon name="check" size={16} />Hide possibly stale</label>
-        </div>
-      </fieldset>
-
-      <button type="submit" form="opp-filters" class="btn btn-primary btn-block">Apply filters</button>
-    </div>
-  </details>
+      </div>
+      <div class="chips">
+        <label class="chip"><input form="opp-filters" type="checkbox" name="salary" value="1" checked={f.hasSalary} /><Icon name="check" size={16} />Shows a salary</label>
+        <label class="chip"><input form="opp-filters" type="checkbox" name="fresh" value="1" checked={f.hideStale} /><Icon name="check" size={16} />Hide possibly stale</label>
+      </div>
+    </fieldset>
+  </FilterPanel>
 
   <section class="results" aria-labelledby="results-count" aria-busy={loading}>
     <div class="results-bar">
@@ -219,10 +203,6 @@
   .search { display: grid; grid-template-columns: 1fr 1fr auto; gap: var(--space-md); align-items: end; padding: var(--space-lg); margin-bottom: var(--space-xl); }
   .layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--space-xl); align-items: start; }
 
-  .filters { padding: var(--space-lg); position: sticky; top: 96px; max-height: calc(100vh - 112px); overflow: auto; }
-  .filters > summary { display: none; }
-  .filters-body { display: grid; gap: var(--space-lg); }
-  .filters-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-xs); }
   fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: var(--space-sm); min-width: 0; }
   legend { display: flex; align-items: center; gap: var(--space-xs); padding: 0; margin-bottom: var(--space-sm); color: var(--color-text-secondary); }
   legend .prov { text-transform: none; letter-spacing: 0; }
@@ -231,6 +211,8 @@
   .results { display: grid; gap: var(--space-md); min-width: 0; }
   .results-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); min-height: 32px; }
   .results-bar p { margin: 0; }
+  .results > :global(:not(.results-bar)) { transition: opacity var(--duration-base) var(--ease-out); }
+  .results[aria-busy='true'] > :global(:not(.results-bar)) { opacity: 0.55; }
   .active { list-style: none; margin: 0; padding: 0; }
   .list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-md); }
   .pager { display: flex; justify-content: space-between; align-items: center; gap: var(--space-sm); margin-top: var(--space-xs); }
@@ -238,12 +220,7 @@
 
   @media (max-width: 1023px) {
     .layout { grid-template-columns: 1fr; gap: var(--space-md); }
-    .filters { position: static; max-height: none; overflow: visible; padding: 0; background: none; border: 0; box-shadow: none; }
-    .filters > summary { display: inline-flex; list-style: none; }
-    .filters > summary::-webkit-details-marker { display: none; }
-    .filters[open] > summary { margin-bottom: var(--space-md); }
-    .filters-body { padding: var(--space-lg); background: var(--color-bg-surface); border: 1px solid var(--color-border-soft); border-radius: var(--radius-xl); box-shadow: var(--shadow-soft); }
-    .banners { grid-template-columns: minmax(0, 1fr); margin-top: var(--space-2xl); }
+        .banners { grid-template-columns: minmax(0, 1fr); margin-top: var(--space-2xl); }
   }
   @media (max-width: 640px) {
     .page-head { margin-bottom: var(--space-lg); }
