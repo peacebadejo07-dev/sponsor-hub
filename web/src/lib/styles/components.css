@@ -84,6 +84,31 @@ ul.tags, ol.tags { list-style: none; margin: 0; padding: 0; }
 .chip:has(input:checked) .count { color: inherit; }
 .chips { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
 
+/* ---------- Filter option (checkbox row: label + count, Top / Nested) ---------- */
+.opts { display: grid; }
+.opt-group { margin: var(--space-xs) 0 2px; font-size: var(--font-size-label-sm); line-height: var(--line-height-label-sm); font-weight: var(--font-weight-medium); color: var(--color-text-secondary); }
+.opt {
+  display: flex; align-items: flex-start; gap: 10px; padding: var(--space-xs) 0; cursor: pointer;
+  font-size: var(--font-size-body-sm); line-height: var(--line-height-body-sm); color: var(--color-text-primary);
+}
+.opt-nested { padding-left: 30px; }
+.opt[hidden] { display: none; }
+.opt input {
+  appearance: none; flex: none; width: 18px; height: 18px; margin: 2px 0 0; display: grid; place-content: center;
+  background: var(--color-bg-surface); border: var(--border-width-strong) solid var(--color-border-input); border-radius: 5px; cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+.opt input:checked { background: var(--color-bg-brand); border: 1px solid var(--color-icon-brand); }
+.opt input:checked::before {
+  content: ''; width: 12px; height: 12px; background: var(--color-text-on-brand);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16.667 5 7.5 14.167 3.333 10'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.opt input:focus-visible { box-shadow: var(--focus-ring); }
+.opt:hover input:not(:checked) { border-color: var(--color-text-secondary); }
+.opt-label { flex: 1; min-width: 0; }
+.opt:has(input:checked) .opt-label { font-weight: var(--font-weight-medium); }
+.opt-count { flex: none; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+
 /* ---------- Provenance badge (Verified / Inferred / Not stated, 24px pill) ---------- */
 .prov {
   display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: 24px; padding: 0 var(--space-xs);
@@ -128,14 +153,23 @@ ul.tags, ol.tags { list-style: none; margin: 0; padding: 0; }
 .card-pad { padding: var(--space-lg); }
 .divider { height: 1px; background: var(--color-border-subtle); border: 0; margin: 0; }
 
-/* ---------- Org logo (initials, Small 32 / Medium 40 / Large 56) ---------- */
+/* ---------- Org logo (Logo / Fallback, Small 32 / Medium 40 / Large 56) ---------- */
 .org-logo {
-  display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: var(--radius-md);
-  background: var(--color-bg-brand-subtle); border: 1px solid var(--color-border-subtle);
-  color: var(--color-text-link); font-size: 14px; font-weight: var(--font-weight-semibold); letter-spacing: 0.02em;
+  display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; padding: 4px; border-radius: var(--radius-md);
+  background: var(--color-bg-surface); border: 1px solid var(--color-border-subtle); overflow: hidden;
 }
-.org-logo-sm { width: 32px; height: 32px; border-radius: var(--radius-sm); font-size: 12px; }
-.org-logo-lg { width: 56px; height: 56px; border-radius: var(--radius-lg); font-size: 18px; }
+.org-logo-sm { width: 32px; height: 32px; border-radius: var(--radius-sm); }
+.org-logo-lg { width: 56px; height: 56px; border-radius: var(--radius-lg); }
+.org-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: var(--radius-xs); }
+.org-logo-fallback { display: grid; place-items: center; width: 100%; height: 100%; border-radius: var(--radius-xs); background: var(--color-bg-subtle); color: var(--color-icon-secondary); }
+
+/* ---------- Halftone corner (Figma › Pattern / Halftone corner): 4px gray dots on a 12px grid, fading out from the top-left ---------- */
+.halftone { position: relative; isolation: isolate; overflow: clip; }
+.halftone::before {
+  content: ''; position: absolute; z-index: -1; inset: 0 auto auto 0; width: 240px; height: 240px; pointer-events: none;
+  background: radial-gradient(circle at 6px 6px, var(--sh-gray-200) 2px, transparent 2.5px) 0 0 / 12px 12px;
+  mask-image: radial-gradient(circle at 0 0, #000 90px, transparent 236px);
+}
 
 /* ---------- Soft blur background (Figma › Components › Backgrounds › Blur V1) ---------- */
 .blur-bg { position: relative; isolation: isolate; overflow: clip; }

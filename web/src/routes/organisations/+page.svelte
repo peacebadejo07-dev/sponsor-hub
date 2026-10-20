@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { RATING_LABELS, RATING_HELP } from '$lib/labels';
+  import { RATING_LABELS, RATING_HELP, GBM_PREFIX, routeShort } from '$lib/labels';
   import Icon from '$lib/ui/Icon.svelte';
+  import Combobox from '$lib/ui/Combobox.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import OrgCard from '$lib/ui/OrgCard.svelte';
   import SubscribeBanner from '$lib/ui/SubscribeBanner.svelte';
@@ -36,6 +37,21 @@
     SECTOR_TAGS.filter((t) => (sectorFacets.get(t) ?? 0) > 0 || f.sectors.includes(t))
   );
   const fmt = (n: number) => n.toLocaleString('en-GB');
+
+  // Sponsorship routes: Skilled Worker, the Global Business Mobility group, then
+  // the rest by size. The smaller ones wait behind "Show all" unless chosen.
+  let allRoutes = $state(false);
+  const routeGroups = $derived.by(() => {
+    const gbm = data.routeFacets.filter((r) => r.value.startsWith(GBM_PREFIX));
+    const other = data.routeFacets.filter((r) => !r.value.startsWith(GBM_PREFIX));
+    const more = (i: number, keep: number, v: string) => i >= keep && !f.routes.includes(v);
+    return {
+      first: other.slice(0, 1).map((r) => ({ ...r, more: false })),
+      gbm: gbm.map((r, i) => ({ ...r, more: more(i, 3, r.value) })),
+      rest: other.slice(1).map((r, i) => ({ ...r, more: more(i, 2, r.value) }))
+    };
+  });
+  const hiddenRoutes = $derived([...routeGroups.gbm, ...routeGroups.rest].filter((r) => r.more).length);
   const following = $derived(new Set(data.following));
   const returnTo = $derived(page.url.pathname + page.url.search);
   const first = $derived((f.page - 1) * data.pageSize + 1);
@@ -43,6 +59,7 @@
 </script>
 
 <svelte:head>
+  <noscript><style>.opt.more { display: flex !important; } .show-all { display: none !important; }</style></noscript>
   <title>Organisations licensed to sponsor workers · Sponsor Hub</title>
   <meta name="description" content="Every UK organisation on the Home Office register of licensed sponsors, with sector, rating, routes and live tech roles." />
 </svelte:head>
@@ -65,8 +82,7 @@
   </div>
   <div class="field">
     <label class="field-label" for="town">Town or city</label>
-    <div class="control"><Icon name="map-pin" /><input id="town" form="org-filters" type="text" name="town" value={f.town} list="towns" placeholder="Anywhere in the UK" autocomplete="off" /></div>
-    <datalist id="towns">{#each data.towns as t (t.value)}<option value={t.value}>{fmt(t.count)}</option>{/each}</datalist>
+    <Combobox id="town" name="town" form="org-filters" value={f.town} options={data.towns} placeholder="Anywhere in the UK" />
   </div>
   <button type="submit" form="org-filters" class="btn btn-primary"><Icon name="search" />Search</button>
 </search>
@@ -98,11 +114,25 @@
 
       <fieldset>
         <legend class="t-overline">Sponsorship route <span class="prov prov-verified"><Icon name="check-circle" size={14} />Verified</span></legend>
-        <div class="chips">
-          {#each data.routeFacets as r (r.value)}
-            <label class="chip"><input form="org-filters" type="checkbox" name="route" value={r.value} checked={f.routes.includes(r.value)} /><Icon name="check" size={16} />{r.value} <span class="count">· {fmt(r.count)}</span></label>
-          {/each}
+        {#snippet routeOpt(r: { value: string; count: number; more: boolean }, nested: boolean)}
+          <label class="opt" class:opt-nested={nested} class:more={r.more} hidden={r.more && !allRoutes} title={r.value}>
+            <input form="org-filters" type="checkbox" name="route" value={r.value} checked={f.routes.includes(r.value)} aria-label={`${r.value}, ${fmt(r.count)}`} />
+            <span class="opt-label">{routeShort(r.value)}</span><span class="opt-count">{fmt(r.count)}</span>
+          </label>
+        {/snippet}
+        <div class="opts">
+          {#each routeGroups.first as r (r.value)}{@render routeOpt(r, false)}{/each}
+          {#if routeGroups.gbm.length}
+            <p class="opt-group" aria-hidden="true">Global Business Mobility</p>
+            {#each routeGroups.gbm as r (r.value)}{@render routeOpt(r, true)}{/each}
+          {/if}
+          {#each routeGroups.rest as r (r.value)}{@render routeOpt(r, false)}{/each}
         </div>
+        {#if hiddenRoutes}
+          <button type="button" class="btn btn-ghost btn-sm show-all" aria-expanded={allRoutes} onclick={() => (allRoutes = !allRoutes)}>
+            {allRoutes ? 'Show fewer routes' : `Show all ${data.routeFacets.length} routes`}<Icon name="chevron-down" size={16} class={allRoutes ? 'flip' : ''} />
+          </button>
+        {/if}
       </fieldset>
 
       <fieldset>
@@ -158,6 +188,9 @@
   legend { display: flex; align-items: center; gap: var(--space-xs); padding: 0; margin-bottom: var(--space-sm); color: var(--color-text-secondary); }
   legend .prov { text-transform: none; letter-spacing: 0; }
   .hint { margin: calc(-1 * var(--space-xs)) 0 0; }
+  .opts { margin-top: calc(-1 * var(--space-xs)); }
+  .show-all { justify-self: start; margin-left: calc(-1 * var(--space-md)); }
+  .show-all :global(.flip) { rotate: 180deg; }
   .results { display: grid; gap: var(--space-md); min-width: 0; }
   .results > p { margin: 0; }
   .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: var(--space-md); }

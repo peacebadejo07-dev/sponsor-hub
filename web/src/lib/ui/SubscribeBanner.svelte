@@ -30,8 +30,10 @@
   .mail { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; background: var(--color-bg-surface); border: 1px solid var(--color-border-subtle); box-shadow: var(--shadow-sm); }
   h2 { max-width: 440px; }
   p { margin: 0; max-width: 380px; }
-  .pill { display: flex; align-items: center; width: min(100%, 360px); padding: 4px 4px 4px var(--space-lg); background: var(--color-bg-surface); border: 1px solid var(--color-border-brand-soft); border-radius: var(--radius-full); box-shadow: var(--shadow-soft); margin-top: var(--space-xs); }
-  .pill:focus-within { box-shadow: var(--focus-ring); }
+  /* Figma › Subscribe field: neutral by default; a soft green ring and halo while typing. */
+  .pill { display: flex; align-items: center; width: min(100%, 360px); padding: 4px 4px 4px var(--space-lg); background: var(--color-bg-surface); border: 1px solid var(--color-border-field); border-radius: var(--radius-full); box-shadow: var(--shadow-soft); margin-top: var(--space-xs); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .pill:hover { border-color: var(--color-border-input); }
+  .pill:focus-within:not(:has(.btn:focus)) { border-color: var(--color-border-brand-soft); box-shadow: inset 0 0 0 0.5px var(--color-border-brand-soft), 0 0 0 4px rgb(90 148 110 / 0.18); }
   .pill input[type='email'] { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: var(--font-size-body); padding: 10px 0; }
   .pill input::placeholder { color: var(--color-text-muted); }
   .pill input:focus-visible { box-shadow: none; }

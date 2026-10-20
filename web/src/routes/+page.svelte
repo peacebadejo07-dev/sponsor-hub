@@ -3,6 +3,7 @@
   import { page } from '$app/state';
   import OppCard from '$lib/OppCard.svelte';
   import Icon from '$lib/ui/Icon.svelte';
+  import Combobox from '$lib/ui/Combobox.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
   import SubscribeBanner from '$lib/ui/SubscribeBanner.svelte';
   import ProfileBanner from '$lib/ui/ProfileBanner.svelte';
@@ -86,8 +87,7 @@
   </div>
   <div class="field">
     <label class="field-label" for="city">Town or city</label>
-    <div class="control"><Icon name="map-pin" /><input id="city" form="opp-filters" type="text" name="city" value={f.city} list="cities" placeholder="Anywhere in the UK" autocomplete="off" /></div>
-    <datalist id="cities">{#each data.cities as c (c.value)}<option value={c.value}>{c.count}</option>{/each}</datalist>
+    <Combobox id="city" name="city" form="opp-filters" value={f.city} options={data.cities} placeholder="Anywhere in the UK" noun="places" />
   </div>
   <button type="submit" form="opp-filters" class="btn btn-primary"><Icon name="search" />Search</button>
 </search>

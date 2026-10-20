@@ -3,7 +3,7 @@
   import { afterNavigate } from '$app/navigation';
   import Logo from './Logo.svelte';
   import Icon from './Icon.svelte';
-  import { initials } from './OrgLogo.svelte';
+  import Avatar from './Avatar.svelte';
 
   /** Figma › Site header (desktop) and Site header · mobile. */
   let { user }: { user: { email: string } | null } = $props();
@@ -31,7 +31,7 @@
     <div class="right">
       {#if user}
         <a class="me" href="/profile" aria-current={here.startsWith('/profile') ? 'page' : undefined}>
-          <span class="me-label">Profile</span><span class="org-logo org-logo-sm" aria-hidden="true">{initials(user.email.split('@')[0].replace(/[._-]+/g, ' '))}</span>
+          <span class="me-label">Profile</span><Avatar name={user.email.split('@')[0]} />
         </a>
       {:else}
         <a class="btn btn-primary signin" href={signIn}>Sign in</a>

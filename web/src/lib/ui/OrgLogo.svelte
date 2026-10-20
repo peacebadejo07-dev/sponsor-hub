@@ -1,16 +1,19 @@
-<script lang="ts" module>
-  const SKIP = new Set(['ltd', 'limited', 'plc', 'llp', 'the', 'uk', 'group', 'and', '&', 'of', 'inc', 'co']);
-  /** Two initials from an organisation name, ignoring words like "Ltd" and "The". */
-  export function initials(name: string): string {
-    const words = name.replace(/[^\p{L}\p{N}& ]/gu, ' ').split(/\s+/).filter((w) => w && !SKIP.has(w.toLowerCase()));
-    const w = words.length ? words : name.split(/\s+/).filter(Boolean);
-    return ((w[0]?.[0] ?? '') + (w[1]?.[0] ?? w[0]?.[1] ?? '')).toUpperCase();
-  }
-</script>
-
 <script lang="ts">
-  /** Figma › Org logo (Initials). Decorative: the organisation name is always shown next to it. */
-  let { name, size = 'md' }: { name: string; size?: 'sm' | 'md' | 'lg' } = $props();
+  import Icon from './Icon.svelte';
+  /**
+   * Figma › Org logo. Type=Logo shows the organisation's own logo; Type=Fallback
+   * (no logo, or it fails to load) shows the grey building. Decorative: the
+   * organisation name is always shown next to it.
+   */
+  let { src = null, size = 'md' }: { name?: string; src?: string | null; size?: 'sm' | 'md' | 'lg' } = $props();
+  let failed = $state(false);
+  const icon = $derived(size === 'sm' ? 16 : size === 'lg' ? 24 : 20);
 </script>
 
-<span class="org-logo" class:org-logo-sm={size === 'sm'} class:org-logo-lg={size === 'lg'} aria-hidden="true">{initials(name)}</span>
+<span class="org-logo" class:org-logo-sm={size === 'sm'} class:org-logo-lg={size === 'lg'} aria-hidden="true">
+  {#if src && !failed}
+    <img {src} alt="" loading="lazy" decoding="async" onerror={() => (failed = true)} />
+  {:else}
+    <span class="org-logo-fallback"><Icon name="building" size={icon} /></span>
+  {/if}
+</span>

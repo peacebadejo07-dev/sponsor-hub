@@ -63,3 +63,25 @@ export function place(locationRaw: string): { first: string; more: number; all: 
   const uniq = [...new Set(parts)];
   return { first: uniq[0] ?? 'Location not stated', more: Math.max(0, uniq.length - 1), all: uniq.join(', ') };
 }
+
+/**
+ * Sponsorship routes as the register names them → short names for the filter
+ * list. Global Business Mobility routes are grouped under one heading. The
+ * register's full name stays the filter value and accessible label.
+ */
+export const GBM_PREFIX = 'Global Business Mobility: ';
+const ROUTE_SHORT: Record<string, string> = {
+  'Ministers of Religion': 'Minister of Religion',
+  'Tier 2 Ministers of Religion': 'Minister of Religion',
+  'Tier 2 General': 'Tier 2 General (old name)',
+  'Government Authorised Exchange': 'Government Exchange',
+  'Senior or Specialist Worker': 'Senior or Specialist',
+  'UK Expansion Worker': 'UK Expansion',
+  'Secondment Worker': 'Secondment',
+  'Intra Company Transfers (ICT)': 'Intra-company Transfer',
+  'Intra-company Routes': 'Intra-company'
+};
+export function routeShort(route: string): string {
+  const r = route.startsWith(GBM_PREFIX) ? route.slice(GBM_PREFIX.length) : route;
+  return ROUTE_SHORT[r] ?? r;
+}

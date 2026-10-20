@@ -86,7 +86,7 @@ export async function topTowns(): Promise<Facet[]> {
   if (townCache && Date.now() - townCache.at < 10 * 60_000) return townCache.towns;
   const towns = await sql<Facet[]>`
     select min(town) as value, count(*)::int as count from orgs
-    where status = 'active' and town <> '' group by town_key
+    where status = 'active' and town <> '' and town !~ '[[:punct:]]$' group by town_key
     having count(*) >= 40 order by min(town)`;
   townCache = { at: Date.now(), towns };
   return towns;

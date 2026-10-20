@@ -2,6 +2,7 @@
   import { ROLE_LABELS, ROLE_FAMILIES } from '@sponsored/core';
   import { WORK_LABELS, EMP_LABELS, LEVEL_LABELS } from '$lib/labels';
   import Icon from '$lib/ui/Icon.svelte';
+  import Combobox from '$lib/ui/Combobox.svelte';
   let { data, form } = $props();
   const p = $derived(data.profile);
   const isNew = $derived(!data.exists);
@@ -60,9 +61,8 @@
       <p class="t-body-sm t-secondary hint">Leave these blank and we won't use location or working pattern to rank roles.</p>
       <div class="field">
         <label class="field-label" for="locations">Towns or cities</label>
-        <div class="control"><input id="locations" name="locations" value={p.locations.join(', ')} list="cities" placeholder="e.g. London, Manchester" autocomplete="off" aria-describedby="locations-help" /></div>
+        <Combobox id="locations" name="locations" value={p.locations.join(', ')} options={data.cities} placeholder="e.g. London, Manchester" icon={null} multiple describedby="locations-help" noun="places" />
         <p id="locations-help" class="field-help">Separate with commas</p>
-        <datalist id="cities">{#each data.cities as c (c.value)}<option value={c.value}></option>{/each}</datalist>
       </div>
       <div class="chips" role="group" aria-label="Working pattern">
         {#each ['remote', 'hybrid', 'onsite'] as m (m)}
