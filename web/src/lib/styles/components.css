@@ -128,9 +128,9 @@ ul.tags, ol.tags { list-style: none; margin: 0; padding: 0; }
   border-radius: var(--radius-sm); white-space: nowrap;
   font-size: var(--font-size-label-sm); line-height: var(--line-height-label-sm); font-weight: var(--font-weight-medium);
 }
-/* Dashed outline, so it never reads as a tag or a provenance badge (Figma: 1px inside stroke, 2px dash, 2px gap). */
+/* Dashed outline, so it never reads as a tag or a provenance badge (Figma: 1.2px inside stroke, 2px dash, 2px gap). */
 .spons-dash { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.spons-dash rect { x: 0.5px; y: 0.5px; width: calc(100% - 1px); height: calc(100% - 1px); rx: 5.5px; fill: none; stroke: var(--spons-border); stroke-width: 1; stroke-dasharray: 2 2; }
+.spons-dash rect { x: 0.6px; y: 0.6px; width: calc(100% - 1.2px); height: calc(100% - 1.2px); rx: 5.4px; fill: none; stroke: var(--spons-border); stroke-width: 1.2; stroke-dasharray: 2 2; }
 .spons-offered { background: var(--color-status-verified-bg); color: var(--color-status-verified-fg); --spons-border: var(--color-status-verified-border); }
 .spons-not_offered { background: var(--color-status-danger-bg); color: var(--color-status-danger-fg); --spons-border: var(--color-status-danger-border); }
 .spons-right_to_work { background: var(--color-status-inferred-bg); color: var(--color-status-inferred-fg); --spons-border: var(--color-status-inferred-border); }
