@@ -1,11 +1,12 @@
 <script lang="ts">
+  import BlurBg from '$lib/ui/BlurBg.svelte';
   import { page } from '$app/state';
   const notFound = $derived(page.status === 404);
 </script>
 
 <svelte:head><title>{notFound ? 'Page not found' : 'Something went wrong'} · Sponsor Hub</title><meta name="robots" content="noindex" /></svelte:head>
 
-<div class="stage blur-bg">
+<div class="stage blur-bg"><BlurBg />
   <p class="t-overline t-muted code">Error {page.status}</p>
   <section class="box card" aria-labelledby="err-h">
     <span class="tile" aria-hidden="true">

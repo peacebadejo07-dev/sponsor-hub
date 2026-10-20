@@ -104,6 +104,7 @@
     opacity: 0; transition: opacity var(--duration-base) var(--ease-out);
   }
   .fade.on { opacity: 1; }
+  @keyframes sheet-in { from { opacity: 0; translate: 0 -8px; } }
 
   @media (max-width: 1023px) {
     .filters { position: static; background: none; border: 0; box-shadow: none; }
@@ -112,6 +113,8 @@
     .filters[open] > summary { margin-bottom: var(--space-md); }
     .body { max-height: none; background: var(--color-bg-surface); border: 1px solid var(--color-border-soft); border-radius: var(--radius-xl); box-shadow: var(--shadow-soft); }
     .scroll { overflow: visible; }
+    /* Figma P3: the panel slides down into place as it opens. */
+    .filters[open] .body { animation: sheet-in var(--duration-slow) var(--ease-out); }
     .fade { display: none; }
     /* The button stays in reach at the bottom of the screen while the panel is open. */
     .apply { position: sticky; bottom: var(--space-sm); box-shadow: var(--shadow-md); }

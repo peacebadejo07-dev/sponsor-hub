@@ -1,4 +1,5 @@
 <script lang="ts">
+  import BlurBg from '$lib/ui/BlurBg.svelte';
   import { page } from '$app/state';
   import { RATING_LABELS, RATING_HELP, ATS_NAMES, ago } from '$lib/labels';
   import { safeHref } from '$lib/safeHref';
@@ -85,7 +86,7 @@
 <a class="back t-label" href="/organisations"><Icon name="chevron-left" size={16} />All organisations</a>
 
 <article class="hero card">
-  <div class="cover blur-bg" aria-hidden="true"></div>
+  <div class="cover blur-bg" aria-hidden="true"><BlurBg /></div>
   <div class="hero-body">
     <div class="logo-wrap"><OrgLogo {name} size="lg" /></div>
     <div class="title-row">

@@ -14,6 +14,7 @@
   transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), scale var(--duration-fast) var(--ease-out);
 }
 .btn:focus-visible { border-radius: var(--radius-full); }
+.btn:active:not(:disabled, [aria-disabled='true']) { scale: 0.97; }
 .btn-primary { background: var(--color-bg-brand); color: var(--color-text-on-brand); }
 .btn-primary:hover { background: var(--color-bg-brand-hover); }
 .btn-primary:active { background: var(--color-bg-brand-pressed); }
@@ -73,6 +74,7 @@ ul.tags, ol.tags { list-style: none; margin: 0; padding: 0; }
   border: var(--border-width-default) solid var(--color-border-input); border-radius: var(--radius-full); background: var(--color-bg-surface);
   font-size: var(--font-size-label); line-height: var(--line-height-label); font-weight: var(--font-weight-medium); color: var(--color-text-primary);
   cursor: pointer; user-select: none;
+  transition: background-color var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out);
 }
 .chip:hover { background: var(--color-bg-muted); }
 .chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
@@ -171,13 +173,21 @@ ul.tags, ol.tags { list-style: none; margin: 0; padding: 0; }
   mask-image: radial-gradient(circle at 0 0, #000 90px, transparent 236px);
 }
 
-/* ---------- Soft blur background (Figma › Components › Backgrounds › Blur V1) ---------- */
+/* ---------- Soft blur background (Figma › Components › Backgrounds › Blur V1; markup in BlurBg.svelte) ---------- */
 .blur-bg { position: relative; isolation: isolate; overflow: clip; }
-.blur-bg::before {
-  content: ''; position: absolute; z-index: -1; pointer-events: none;
-  width: var(--blur-w, 1100px); aspect-ratio: 1697 / 1449; left: var(--blur-x, 50%); top: var(--blur-y, 50%);
+.blur-bg > .blur {
+  position: absolute; z-index: -1; pointer-events: none;
+  width: var(--blur-w, 1100px); aspect-ratio: 1692 / 1441; left: var(--blur-x, 50%); top: var(--blur-y, 50%);
   translate: -50% -50%; rotate: var(--blur-rotate, 0deg);
-  background: url('/blur.png') center / contain no-repeat; opacity: var(--blur-opacity, 0.6);
-  /* The render has a #f5f5f5 backdrop: lift it to white, then multiply so white disappears into what's behind. */
-  filter: brightness(1.0409); mix-blend-mode: multiply;
+  opacity: calc(var(--blur-opacity, 0.6) * 0.7); /* Blur V1 sits at 70% in Figma */
 }
+.blob { position: absolute; inset: 0; background: center / contain no-repeat; animation: blob-in var(--duration-entrance) var(--ease-entrance) both; }
+.blob-light-green { background-image: url('/blob-light-green.webp'); --blob-from: -40px 24px; }
+.blob-amber { background-image: url('/blob-amber.webp'); --blob-from: 40px -24px; }
+.blob-green { background-image: url('/blob-green.webp'); --blob-from: 40px -24px; animation-delay: 150ms; }
+/* Once per visit: app.html marks the page after the first entrance. */
+.blur-seen .blob { animation: none; }
+/* Cards that appear after an action (Check your email) rise in gently. */
+@keyframes rise-in { from { opacity: 0; translate: 0 8px; } }
+.rise { animation: rise-in var(--duration-slow) var(--ease-out) both; }
+@keyframes blob-in { from { opacity: 0; translate: var(--blob-from); } }

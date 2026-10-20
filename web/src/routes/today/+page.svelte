@@ -1,4 +1,5 @@
 <script lang="ts">
+  import BlurBg from '$lib/ui/BlurBg.svelte';
   import OppCard from '$lib/OppCard.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
@@ -57,7 +58,7 @@
         {/if}
       </section>
     {:else}
-      <section class="prompt card blur-bg" aria-labelledby="prompt-h">
+      <section class="prompt card blur-bg" aria-labelledby="prompt-h"><BlurBg />
         <h2 id="prompt-h" class="t-heading-4">See what changed for you</h2>
         <p class="t-body-sm t-secondary">Sign in to see new roles ranked for you, new roles at organisations you follow, and changes to roles you've saved.</p>
         <a class="btn btn-primary" href="/login?next=%2Ftoday">Sign in</a>

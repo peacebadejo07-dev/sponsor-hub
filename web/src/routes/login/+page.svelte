@@ -1,4 +1,5 @@
 <script lang="ts">
+  import BlurBg from '$lib/ui/BlurBg.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   let { data, form } = $props();
   const fmt = (n: number) => n.toLocaleString('en-GB');
@@ -7,8 +8,8 @@
 <svelte:head><title>{form?.sent ? 'Check your email' : 'Sign in'} · Sponsor Hub</title><meta name="robots" content="noindex" /></svelte:head>
 
 {#if form?.sent}
-  <div class="stage blur-bg confirm-stage">
-    <section class="confirm card" aria-labelledby="confirm-h">
+  <div class="stage blur-bg confirm-stage"><BlurBg />
+    <section class="confirm card rise" aria-labelledby="confirm-h">
       <span class="tile" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28"><rect x="3" y="6" width="22" height="16" rx="3" fill="#A8D5B5" /><path d="M3 9c0-1.7 1.3-3 3-3h16c1.7 0 3 1.3 3 3l-9.2 5.5a3.4 3.4 0 0 1-3.6 0L3 9Z" fill="#1B7D3E" /></svg></span>
       <h1 id="confirm-h" class="t-heading-2" tabindex="-1">Check your email</h1>
       <p class="t-body t-secondary" role="status">If <strong>{form.email}</strong> is a valid address, we've sent a sign-in link to it. It works once and expires in 15 minutes.</p>
@@ -24,7 +25,7 @@
     </section>
   </div>
 {:else}
-  <div class="stage blur-bg">
+  <div class="stage blur-bg"><BlurBg />
     <div class="split">
       <section class="signin card" aria-labelledby="signin-h">
         <div class="head">

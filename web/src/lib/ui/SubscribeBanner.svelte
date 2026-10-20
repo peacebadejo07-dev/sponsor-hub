@@ -1,4 +1,5 @@
 <script lang="ts">
+  import BlurBg from './BlurBg.svelte';
   import Icon from './Icon.svelte';
   /**
    * Figma › Banner / Subscribe. Signed out, the email goes through the normal
@@ -8,7 +9,7 @@
   let { loggedIn = false }: { loggedIn?: boolean } = $props();
 </script>
 
-<section class="banner card blur-bg" aria-labelledby="subscribe-title">
+<section class="banner card blur-bg" aria-labelledby="subscribe-title"><BlurBg />
   <span class="mail" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28"><rect x="3" y="6" width="22" height="16" rx="3" fill="#A8D5B5" /><path d="M3 9c0-1.7 1.3-3 3-3h16c1.7 0 3 1.3 3 3l-9.2 5.5a3.4 3.4 0 0 1-3.6 0L3 9Z" fill="#1B7D3E" /></svg></span>
   <h2 id="subscribe-title" class="t-heading-3">Get roles that fit you, every week</h2>
   <p class="t-body t-secondary">New tech roles at UK visa sponsors that match your profile. Free, one click to stop.</p>

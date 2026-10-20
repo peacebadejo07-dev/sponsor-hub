@@ -126,7 +126,7 @@
 </li>
 
 <style>
-  .job { display: flex; flex-direction: column; list-style: none; border-color: var(--color-border-subtle); box-shadow: var(--shadow-xs); transition: box-shadow 120ms ease, border-color 120ms ease; }
+  .job { display: flex; flex-direction: column; list-style: none; border-color: var(--color-border-subtle); box-shadow: var(--shadow-xs); transition: box-shadow var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out); }
   .job:hover { border-color: var(--color-border-default); box-shadow: var(--shadow-sm); }
   .job.attached { overflow: hidden; }
   .job.dismissed .body { opacity: 0.6; }

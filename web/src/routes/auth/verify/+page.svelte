@@ -1,4 +1,5 @@
 <script lang="ts">
+  import BlurBg from '$lib/ui/BlurBg.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   let { data, form } = $props();
   const broken = $derived(form?.failed || !data.token);
@@ -6,7 +7,7 @@
 
 <svelte:head><title>Sign in · Sponsor Hub</title><meta name="robots" content="noindex" /></svelte:head>
 
-<div class="stage blur-bg">
+<div class="stage blur-bg"><BlurBg />
   <section class="box card" aria-labelledby="verify-h">
     <span class="tile" aria-hidden="true"><Icon name={broken ? 'alert' : 'check-circle'} size={28} /></span>
     {#if broken}
