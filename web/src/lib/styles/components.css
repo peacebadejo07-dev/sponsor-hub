@@ -122,17 +122,20 @@ ul.tags, ol.tags { list-style: none; margin: 0; padding: 0; }
 .prov-inferred { background: var(--color-status-inferred-bg); color: var(--color-status-inferred-fg); border-color: var(--color-status-inferred-border); }
 .prov-unconfirmed { background: var(--color-status-unconfirmed-bg); color: var(--color-status-unconfirmed-fg); border-color: var(--color-status-unconfirmed-border); }
 
-/* ---------- Sponsorship chip (28px, radius 6) ---------- */
+/* ---------- Sponsorship chip (28px, radius 6, dashed outline) ---------- */
 .spons {
-  display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: 28px; padding: 0 var(--space-xs);
-  border: 1px solid; border-radius: var(--radius-sm); white-space: nowrap;
+  position: relative; display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: 28px; padding: 0 var(--space-xs);
+  border-radius: var(--radius-sm); white-space: nowrap;
   font-size: var(--font-size-label-sm); line-height: var(--line-height-label-sm); font-weight: var(--font-weight-medium);
 }
-.spons-offered { background: var(--color-status-verified-bg); color: var(--color-status-verified-fg); border-color: var(--color-status-verified-border); }
-.spons-not_offered { background: var(--color-status-danger-bg); color: var(--color-status-danger-fg); border-color: var(--color-status-danger-border); }
-.spons-right_to_work { background: var(--color-status-inferred-bg); color: var(--color-status-inferred-fg); border-color: var(--color-status-inferred-border); }
-.spons-unclear { background: var(--color-status-info-bg); color: var(--color-status-info-fg); border-color: var(--color-status-info-border); }
-.spons-unmentioned { background: var(--color-status-unconfirmed-bg); color: var(--color-status-unconfirmed-fg); border-color: var(--color-status-unconfirmed-border); }
+/* Dashed outline, so it never reads as a tag or a provenance badge (Figma: 1px inside stroke, 2px dash, 2px gap). */
+.spons-dash { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.spons-dash rect { x: 0.5px; y: 0.5px; width: calc(100% - 1px); height: calc(100% - 1px); rx: 5.5px; fill: none; stroke: var(--spons-border); stroke-width: 1; stroke-dasharray: 2 2; }
+.spons-offered { background: var(--color-status-verified-bg); color: var(--color-status-verified-fg); --spons-border: var(--color-status-verified-border); }
+.spons-not_offered { background: var(--color-status-danger-bg); color: var(--color-status-danger-fg); --spons-border: var(--color-status-danger-border); }
+.spons-right_to_work { background: var(--color-status-inferred-bg); color: var(--color-status-inferred-fg); --spons-border: var(--color-status-inferred-border); }
+.spons-unclear { background: var(--color-status-info-bg); color: var(--color-status-info-fg); --spons-border: var(--color-status-info-border); }
+.spons-unmentioned { background: var(--color-status-unconfirmed-bg); color: var(--color-status-unconfirmed-fg); --spons-border: var(--color-status-unconfirmed-border); }
 
 /* ---------- Checkbox and Radio (44px rows) ---------- */
 .check { display: flex; align-items: center; gap: var(--space-sm); min-height: var(--size-touch-target); cursor: pointer; font-size: var(--font-size-body); line-height: var(--line-height-body); color: var(--color-text-primary); }

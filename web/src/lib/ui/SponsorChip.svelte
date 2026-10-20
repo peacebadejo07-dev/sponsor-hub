@@ -7,10 +7,10 @@
     not_offered: ['No sponsorship', 'x-circle'],
     right_to_work: ['Right to work needed', 'alert'],
     unclear: ['Sponsorship unclear', 'help'],
-    unmentioned: ['Not mentioned in advert', 'minus-circle']
+    unmentioned: ['Sponsorship not mentioned', 'minus-circle']
   };
   const [label, icon] = $derived(MAP[signal] ?? MAP.unmentioned);
   const key = $derived(signal in MAP ? signal : 'unmentioned');
 </script>
 
-<span class="spons spons-{key}"><Icon name={icon} size={16} />{label}</span>
+<span class="spons spons-{key}"><svg class="spons-dash" aria-hidden="true"><rect /></svg><Icon name={icon} size={16} />{label}</span>

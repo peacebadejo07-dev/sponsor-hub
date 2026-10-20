@@ -88,9 +88,10 @@
     <hr class="divider" />
 
     <div class="foot">
-      <ProvenanceBadge status={st('sponsorship')} />
+      <!-- When the advert says nothing, "Not stated" would repeat the chip above, so it's left out. -->
+      {#if (o.sponsorship_signal ?? 'unmentioned') !== 'unmentioned'}<ProvenanceBadge status={st('sponsorship')} />{/if}
       <p class="meta t-caption t-muted">
-        {posted}{#if source} · via {source}{/if}{#if updated} · updated {updated}{/if}
+        {posted}{#if source}{` · via ${source}`}{/if}{#if updated}{` · updated ${updated}`}{/if}
         {#if o.stale_reason}<span class="stale"><Icon name="alert" size={14} />{o.stale_reason}</span>{/if}
       </p>
       <div class="actions">
