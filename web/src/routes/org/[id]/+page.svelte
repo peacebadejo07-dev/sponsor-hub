@@ -305,8 +305,13 @@
 
   .legend { display: grid; gap: 6px; justify-items: start; }
   .legend p { margin: 0; }
-  .banners { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-lg); margin-top: var(--space-4xl); }
+  .banners { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: var(--space-xl); margin-top: var(--space-4xl); }
 
+  /* Desktop Large: open roles two per row; banners keep a 352px right margin (Figma). */
+  @media (min-width: 1536px) {
+    .list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .banners { margin-right: 352px; }
+  }
   @media (max-width: 1023px) {
     .columns { grid-template-columns: minmax(0, 1fr); }
     .banners { grid-template-columns: minmax(0, 1fr); margin-top: var(--space-2xl); }

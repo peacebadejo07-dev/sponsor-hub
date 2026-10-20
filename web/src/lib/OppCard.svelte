@@ -126,11 +126,12 @@
 </li>
 
 <style>
-  .job { list-style: none; border-color: var(--color-border-subtle); box-shadow: var(--shadow-xs); transition: box-shadow 120ms ease, border-color 120ms ease; }
+  .job { display: flex; flex-direction: column; list-style: none; border-color: var(--color-border-subtle); box-shadow: var(--shadow-xs); transition: box-shadow 120ms ease, border-color 120ms ease; }
   .job:hover { border-color: var(--color-border-default); box-shadow: var(--shadow-sm); }
   .job.attached { overflow: hidden; }
   .job.dismissed .body { opacity: 0.6; }
-  .body { display: grid; gap: var(--space-md); padding: var(--space-lg); }
+  .body { flex: 1; display: flex; flex-direction: column; gap: var(--space-md); padding: var(--space-lg); }
+  .body > :global(.divider) { margin-top: auto; }
 
   .flag { display: flex; gap: var(--space-sm); align-items: center; padding: var(--space-sm) var(--space-lg); border-bottom: 1px solid var(--color-border-subtle); background: var(--color-bg-brand-subtle); color: var(--color-status-verified-fg); }
   .flag-closed { background: var(--color-bg-page); color: var(--color-status-unconfirmed-fg); }
