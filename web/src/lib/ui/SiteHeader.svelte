@@ -54,7 +54,7 @@
 
 <style>
   .site-header { background: var(--color-bg-surface); border-bottom: 1px solid var(--color-border-subtle); position: sticky; top: 0; z-index: 10; }
-  .bar { max-width: var(--layout-content-max); margin: 0 auto; padding: var(--space-xs) var(--space-md); min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); }
+  .bar { max-width: var(--layout-page-max); margin: 0 auto; padding: var(--space-xs) var(--layout-gutter); min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); }
   .left { display: flex; align-items: center; gap: var(--space-xl); min-width: 0; }
   .home { display: block; border-radius: var(--radius-sm); }
   .nav { display: flex; gap: var(--space-2xs); }

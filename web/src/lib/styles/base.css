@@ -10,10 +10,12 @@ body {
   line-height: var(--line-height-body);
   -webkit-font-smoothing: antialiased;
   font-feature-settings: 'cv11', 'ss01';
+  /* Body text uses Inter's text cut (optical size 14), like Figma's Inter. */
+  font-optical-sizing: none;
 }
 a { color: inherit; }
 button, input, select, textarea { font: inherit; color: inherit; }
-h1, h2, h3, h4 { margin: 0; color: var(--color-text-primary); }
+h1, h2, h3, h4 { margin: 0; color: var(--color-text-primary); font-family: var(--font-family-display); font-variation-settings: var(--font-optical-display); font-weight: var(--font-weight-semibold); }
 :focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
 .visually-hidden {
   position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -21,11 +23,11 @@ h1, h2, h3, h4 { margin: 0; color: var(--color-text-primary); }
 }
 
 /* Text styles: same names as the SH/* text styles in Figma */
-.t-display { font-size: var(--font-size-display); line-height: var(--line-height-display); letter-spacing: var(--tracking-display); font-weight: var(--font-weight-bold); }
-.t-heading-1 { font-size: var(--font-size-heading-1); line-height: var(--line-height-heading-1); letter-spacing: var(--tracking-heading-1); font-weight: var(--font-weight-bold); }
-.t-heading-2 { font-size: var(--font-size-heading-2); line-height: var(--line-height-heading-2); letter-spacing: var(--tracking-heading-2); font-weight: var(--font-weight-semibold); }
-.t-heading-3 { font-size: var(--font-size-heading-3); line-height: var(--line-height-heading-3); letter-spacing: var(--tracking-heading-3); font-weight: var(--font-weight-semibold); }
-.t-heading-4 { font-size: var(--font-size-heading-4); line-height: var(--line-height-heading-4); font-weight: var(--font-weight-semibold); }
+.t-display { font-size: var(--font-size-display); line-height: var(--line-height-display); letter-spacing: var(--tracking-display); font-weight: var(--font-weight-semibold); font-family: var(--font-family-display); font-variation-settings: var(--font-optical-display); }
+.t-heading-1 { font-size: var(--font-size-heading-1); line-height: var(--line-height-heading-1); letter-spacing: var(--tracking-heading-1); font-weight: var(--font-weight-semibold); font-family: var(--font-family-display); font-variation-settings: var(--font-optical-display); }
+.t-heading-2 { font-size: var(--font-size-heading-2); line-height: var(--line-height-heading-2); letter-spacing: var(--tracking-heading-2); font-weight: var(--font-weight-semibold); font-family: var(--font-family-display); font-variation-settings: var(--font-optical-display); }
+.t-heading-3 { font-size: var(--font-size-heading-3); line-height: var(--line-height-heading-3); letter-spacing: var(--tracking-heading-3); font-weight: var(--font-weight-semibold); font-family: var(--font-family-display); font-variation-settings: var(--font-optical-display); }
+.t-heading-4 { font-size: var(--font-size-heading-4); line-height: var(--line-height-heading-4); font-weight: var(--font-weight-semibold); font-family: var(--font-family-display); font-variation-settings: var(--font-optical-display); }
 .t-body-lg { font-size: var(--font-size-body-lg); line-height: var(--line-height-body-lg); font-weight: var(--font-weight-regular); }
 .t-body { font-size: var(--font-size-body); line-height: var(--line-height-body); font-weight: var(--font-weight-regular); }
 .t-body-strong { font-size: var(--font-size-body); line-height: var(--line-height-body); font-weight: var(--font-weight-semibold); }
@@ -34,7 +36,7 @@ h1, h2, h3, h4 { margin: 0; color: var(--color-text-primary); }
 .t-label-sm { font-size: var(--font-size-label-sm); line-height: var(--line-height-label-sm); font-weight: var(--font-weight-medium); }
 .t-caption { font-size: var(--font-size-caption); line-height: var(--line-height-caption); font-weight: var(--font-weight-regular); }
 .t-overline { font-size: var(--font-size-overline); line-height: var(--line-height-overline); letter-spacing: var(--tracking-overline); font-weight: var(--font-weight-semibold); text-transform: uppercase; }
-.t-stat { font-size: var(--font-size-stat); line-height: var(--line-height-stat); letter-spacing: var(--tracking-stat); font-weight: var(--font-weight-semibold); font-variant-numeric: tabular-nums; }
+.t-stat { font-size: var(--font-size-stat); line-height: var(--line-height-stat); letter-spacing: var(--tracking-stat); font-weight: var(--font-weight-semibold); font-family: var(--font-family-display); font-variation-settings: var(--font-optical-display); font-variant-numeric: tabular-nums; }
 .t-secondary { color: var(--color-text-secondary); }
 .t-muted { color: var(--color-text-muted); }
 .t-link { color: var(--color-text-link); }

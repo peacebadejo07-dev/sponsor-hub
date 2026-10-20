@@ -62,7 +62,7 @@
 {/if}
 
 <style>
-  .stage { flex: 1; display: grid; align-items: center; padding: var(--space-4xl) max(var(--space-md), calc((100% - 1168px) / 2)); --blur-w: 1500px; --blur-rotate: 93deg; --blur-x: 58%; --blur-y: 62%; --blur-opacity: 0.6; }
+  .stage { flex: 1; display: grid; align-items: center; padding: var(--space-4xl) max(var(--layout-gutter), calc((100% - var(--layout-focus-max)) / 2)); --blur-w: 1500px; --blur-rotate: 93deg; --blur-x: 58%; --blur-y: 62%; --blur-opacity: 0.6; }
   .split { display: grid; grid-template-columns: minmax(0, 500px) minmax(0, 425px); justify-content: space-between; align-items: center; gap: var(--space-3xl); }
   .signin { display: grid; gap: var(--space-lg); padding: var(--space-2xl); }
   .head { display: grid; gap: var(--space-xs); }

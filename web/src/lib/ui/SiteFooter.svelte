@@ -36,7 +36,7 @@
 
 <style>
   .site-footer { background: var(--color-bg-surface); border-top: 1px solid var(--color-border-subtle); padding: var(--space-3xl) 0; }
-  .inner { max-width: var(--layout-content-max); margin: 0 auto; padding: 0 var(--space-md); display: grid; gap: var(--space-lg); }
+  .inner { max-width: var(--layout-page-max); margin: 0 auto; padding: 0 var(--layout-gutter); display: grid; gap: var(--space-lg); }
   .top { display: flex; justify-content: space-between; gap: var(--space-xl); flex-wrap: wrap; }
   .brand { display: grid; gap: var(--space-xs); max-width: 360px; align-content: start; }
   .brand p { margin: 0; }

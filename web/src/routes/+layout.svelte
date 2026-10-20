@@ -32,7 +32,7 @@
 <style>
   .skip { position: absolute; left: var(--space-md); top: -100px; z-index: 100; background: var(--color-bg-surface); padding: var(--space-xs) var(--space-md); border-radius: var(--radius-md); box-shadow: var(--shadow-md); }
   .skip:focus { top: var(--space-md); }
-  .page { max-width: var(--layout-content-max); margin: 0 auto; padding: var(--space-2xl) var(--space-md) var(--space-4xl); min-height: 70vh; }
+  .page { max-width: var(--layout-page-max); margin: 0 auto; padding: var(--space-2xl) var(--layout-gutter) var(--space-4xl); min-height: 70vh; }
   .auth-shell { min-height: 100vh; display: flex; flex-direction: column; }
   .auth-main { flex: 1; display: flex; flex-direction: column; }
   @media (max-width: 640px) { .page { padding-top: var(--space-lg); padding-bottom: var(--space-2xl); } }

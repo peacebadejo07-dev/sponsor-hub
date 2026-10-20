@@ -70,7 +70,7 @@
 </li>
 
 <style>
-  .org { list-style: none; display: grid; gap: var(--space-md); align-content: start; padding: var(--space-lg); border-color: var(--color-border-subtle); box-shadow: var(--shadow-xs); transition: box-shadow 120ms ease, border-color 120ms ease; }
+  .org { min-width: 0; list-style: none; display: grid; gap: var(--space-md); align-content: start; padding: var(--space-lg); border-color: var(--color-border-subtle); box-shadow: var(--shadow-xs); transition: box-shadow 120ms ease, border-color 120ms ease; }
   .org:hover { border-color: var(--color-border-default); box-shadow: var(--shadow-sm); }
   .head { display: flex; gap: var(--space-md); align-items: center; }
   .names { display: grid; gap: 2px; flex: 1; min-width: 0; }

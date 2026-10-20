@@ -103,6 +103,9 @@
 
   /* ---------- Typography (desktop; phone sizes below) ---------- */
   --font-family-sans: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Inter Display = the same variable font at optical size 32 (Figma: font/family/display). */
+  --font-family-display: 'Inter Variable', 'Inter Display', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-optical-display: 'opsz' 32;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -134,9 +137,11 @@
   --space-4xl: 64px;
   --space-5xl: 80px;
   --space-6xl: 96px;
-  --layout-content-max: 1200px;
+  --layout-content-max: 1536px; /* Desktop Large: 1600 frame − 2 × 32 gutter */
+  --layout-focus-max: 1136px;   /* focused pages (sign in): Desktop Small content width */
   --layout-reading-max: 640px;
   --layout-gutter: 16px;
+  --layout-page-max: calc(var(--layout-content-max) + 2 * var(--layout-gutter));
   --size-control-sm: 32px;
   --size-control-md: 44px;
   --size-control-lg: 52px;
@@ -164,6 +169,18 @@
   --shadow-lg: 0 4px 8px -2px rgb(13 27 38 / 0.06), 0 20px 40px -8px rgb(13 27 38 / 0.18);
   --shadow-soft: 0 3px 8px rgb(156 159 181 / 0.12);
   --focus-ring: 0 0 0 2px var(--sh-white), 0 0 0 4px var(--sh-green-600);
+
+  /* ---------- Motion (Figma: SH Motion) ---------- */
+  --duration-instant: 80ms;
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --duration-entrance: 1100ms;
+  --delay-stagger: 30ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* ---------- Old names, kept so pages not yet restyled still work ---------- */
   --bg: var(--color-bg-page);
@@ -193,4 +210,10 @@
 }
 @media (min-width: 1024px) {
   :root { --layout-gutter: 32px; }
+}
+
+/* Reduced motion: no movement anywhere; changes happen at once. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --duration-fast: 1ms; --duration-base: 1ms; --duration-slow: 1ms; --duration-entrance: 1ms; --delay-stagger: 0ms; }
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
 }
