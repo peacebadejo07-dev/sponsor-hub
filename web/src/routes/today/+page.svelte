@@ -68,7 +68,7 @@
       <h2 id="new-h" class="t-heading-3">New since yesterday <span class="n">{fmt(s.fresh)}</span></h2>
       {#if data.fresh.length}
         <ul class="list">{#each data.fresh as o (o.id)}<OppCard {o} loggedIn={data.loggedIn} mark={data.marks[o.id] ?? null} returnTo="/today" headingLevel={3} />{/each}</ul>
-        {#if s.fresh > data.fresh.length}<a class="btn btn-secondary btn-block" href="/opportunities?since=7">See all {fmt(s.fresh)} new roles<Icon name="arrow-right" size={16} /></a>{/if}
+        {#if s.fresh > data.fresh.length}<a class="btn btn-secondary btn-block" href="/?since=7">See all {fmt(s.fresh)} new roles<Icon name="arrow-right" size={16} /></a>{/if}
       {:else}
         <EmptyState icon="search" headingLevel={3} title="No new roles in the latest scan" body="We check every job board daily. New roles show up here the morning after they're posted." />
       {/if}

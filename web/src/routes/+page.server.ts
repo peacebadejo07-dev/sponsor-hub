@@ -1,37 +1,37 @@
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { PAGE_SIZE, searchOrgs, topTowns, registerInfo, type OrgFilters } from '$lib/server/orgs';
-import { SECTOR_LABELS, SECTOR_TAGS } from '@sponsored/core';
-import { savedOrgIds } from '@sponsored/accounts';
+import { OPP_PAGE_SIZE, searchOpps, topCities, oppSummary, type OppFilters } from '$lib/server/opps';
+import { ROLE_FAMILIES } from '@sponsored/core';
+import { marksFor } from '@sponsored/accounts';
 import { sql } from '$lib/server/db';
 
-// Postgres rejects NUL bytes in text, so strip control characters from every input.
 const clean = (s: string) => s.replace(/[\u0000-\u001f]/g, '');
-const all = (u: URL, k: string) => u.searchParams.getAll(k).map(clean).filter(Boolean);
-const one = (u: URL, k: string) => clean(u.searchParams.get(k) ?? '').trim();
+const all = (u: URL, k: string) => u.searchParams.getAll(k).map(clean).filter(Boolean).slice(0, 12);
+const pick = (vals: string[], allowed: readonly string[]) => vals.filter((v) => allowed.includes(v));
+
+// Before Opportunities became the home page, / was the organisation search. Send old links that
+// carry organisation-only filters to their new home.
+const ORG_ONLY = ['town', 'sector', 'route', 'rating', 'careers'];
 
 export const load: PageServerLoad = async ({ url, setHeaders, locals }) => {
-  const filters: OrgFilters = {
-    q: one(url, 'q').slice(0, 80),
-    sectors: all(url, 'sector').filter((s) => (SECTOR_TAGS as readonly string[]).includes(s)),
-    town: one(url, 'town').slice(0, 60),
-    routes: all(url, 'route').slice(0, 20),
-    ratings: all(url, 'rating').slice(0, 10),
-    hasCareers: url.searchParams.get('careers') === '1',
-    page: Math.max(1, Math.min(4000, Number(url.searchParams.get('page')) || 1))
+  if (ORG_ONLY.some((k) => url.searchParams.has(k))) redirect(301, `/organisations${url.search}`);
+  const since = Number(url.searchParams.get('since'));
+  const f: OppFilters = {
+    q: clean(url.searchParams.get('q') ?? '').trim().slice(0, 80),
+    families: pick(all(url, 'family'), ROLE_FAMILIES),
+    city: clean(url.searchParams.get('city') ?? '').trim().slice(0, 60),
+    modes: pick(all(url, 'mode'), ['remote', 'hybrid', 'onsite']),
+    employment: pick(all(url, 'emp'), ['full_time', 'part_time', 'contract', 'internship', 'temporary']),
+    sponsorship: pick(all(url, 'sponsor'), ['offered', 'not_offered', 'right_to_work', 'unclear', 'unmentioned']),
+    seniority: pick(all(url, 'level'), ['entry', 'mid', 'senior', 'lead', 'principal', 'executive']),
+    since: [7, 14, 30].includes(since) ? since : 0,
+    hasSalary: url.searchParams.get('salary') === '1',
+    hideStale: url.searchParams.get('fresh') === '1',
+    page: Math.max(1, Math.min(2000, Number(url.searchParams.get('page')) || 1))
   };
   setHeaders({ 'cache-control': 'public, max-age=60, s-maxage=300' });
-  const [result, towns, register] = await Promise.all([searchOrgs(filters), topTowns(), registerInfo()]);
-  // Signed-in responses are private (see hooks.server.ts), so per-user follow state is safe here.
-  const following = locals.user ? [...(await savedOrgIds(sql, locals.user.userId, result.orgs.map((o) => o.id)))] : [];
-  return {
-    filters,
-    ...result,
-    towns,
-    register,
-    pageSize: PAGE_SIZE,
-    pages: Math.max(1, Math.ceil(result.total / PAGE_SIZE)),
-    sectorLabels: SECTOR_LABELS,
-    loggedIn: !!locals.user,
-    following
-  };
+  const [result, cities, summary] = await Promise.all([searchOpps(f), topCities(), oppSummary()]);
+  // Signed-in responses are private (see hooks.server.ts), so per-user marks are safe to include here.
+  const marks = locals.user ? Object.fromEntries(await marksFor(sql, locals.user.userId, result.rows.map((r) => r.id))) : {};
+  return { filters: f, ...result, cities, summary, loggedIn: !!locals.user, marks, pageSize: OPP_PAGE_SIZE, pages: Math.max(1, Math.ceil(result.total / OPP_PAGE_SIZE)) };
 };

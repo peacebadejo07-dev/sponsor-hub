@@ -3,7 +3,7 @@
   /** Figma › Site footer. Neutral links (not green), per the template's convention. */
   const REPO = 'https://github.com/peacebadejo07-dev/sponsor-hub';
   const COLS = [
-    { title: 'Explore', links: [['/opportunities', 'Opportunities'], ['/', 'Organisations'], ['/today', 'Today']] },
+    { title: 'Explore', links: [['/', 'Opportunities'], ['/organisations', 'Organisations'], ['/today', 'Today']] },
     { title: 'About', links: [['/status', 'Scan status'], ['/bot', 'About our crawler'], ['/privacy', 'Privacy']] },
     { title: 'Project', links: [[REPO, 'Source code on GitHub'], [`${REPO}/issues/new`, 'Report a problem']] }
   ];

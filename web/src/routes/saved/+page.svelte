@@ -26,7 +26,7 @@
   <div class="roles">
     {#if nothing}
       <EmptyState icon="bookmark" title="Nothing saved yet" body="Use Save on any role in Opportunities or For you and it'll appear here. We'll flag it if the employer changes the advert or takes it down.">
-        <a class="btn btn-primary" href="/opportunities">Browse opportunities</a>
+        <a class="btn btn-primary" href="/">Browse opportunities</a>
         <a class="btn btn-secondary" href="/for-you">See roles for you</a>
       </EmptyState>
     {:else}
@@ -75,7 +75,7 @@
         </ul>
         <p class="t-caption t-muted">We'll show new roles from these organisations on Today, and in your weekly email if it's on.</p>
       {:else}
-        <p class="t-body-sm t-secondary">You're not following any organisations yet. Open one from <a class="t-link" href="/">Organisations</a> and choose Follow to see its new roles here and on Today.</p>
+        <p class="t-body-sm t-secondary">You're not following any organisations yet. Open one from <a class="t-link" href="/organisations">Organisations</a> and choose Follow to see its new roles here and on Today.</p>
       {/if}
     </section>
   </aside>

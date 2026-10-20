@@ -49,12 +49,12 @@
     {#if !data.hasPrefs}
       <EmptyState icon="sparkle" title="Tell us what you're looking for" body="Until you do, every role scores the same. It takes a minute, and every answer is optional.">
         <a class="btn btn-primary" href="/profile">Set up your profile</a>
-        <a class="btn btn-secondary" href="/opportunities">Browse all roles</a>
+        <a class="btn btn-secondary" href="/">Browse all roles</a>
       </EmptyState>
     {:else if data.items.length === 0}
       <EmptyState icon="search" title="No roles to show yet" body="Nothing live matches what you've told us. Try widening your role types or places.">
         <a class="btn btn-primary" href="/profile">Edit your profile</a>
-        <a class="btn btn-secondary" href="/opportunities">Browse all roles</a>
+        <a class="btn btn-secondary" href="/">Browse all roles</a>
       </EmptyState>
     {:else}
       <ul class="list">{#each data.items as it (it.row.id)}<OppCard o={it.row as never} loggedIn={true} mark={it.mark} match={it.match} {returnTo} />{/each}</ul>

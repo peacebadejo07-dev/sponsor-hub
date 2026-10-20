@@ -1,69 +1,95 @@
 <script lang="ts">
-  import { RATING_LABELS, RATING_HELP } from '$lib/labels';
+  import { ROLE_LABELS, type RoleFamily } from '@sponsored/core';
+  import { page } from '$app/state';
+  import OppCard from '$lib/OppCard.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   import EmptyState from '$lib/ui/EmptyState.svelte';
-  import OrgCard from '$lib/ui/OrgCard.svelte';
   import SubscribeBanner from '$lib/ui/SubscribeBanner.svelte';
   import ProfileBanner from '$lib/ui/ProfileBanner.svelte';
-  import { SECTOR_TAGS } from '@sponsored/core';
+  import { navigating } from '$app/state';
+  import { ago } from '$lib/labels';
   import { onMount } from 'svelte';
-  import { page } from '$app/state';
   let { data } = $props();
   // Open on desktop; on smaller screens start collapsed so results are visible.
   let filtersOpen = $state(true);
   onMount(() => {
+    // Active filters are listed above the results, so the panel can start closed.
     if (window.innerWidth < 1024) filtersOpen = false;
   });
 
   const f = $derived(data.filters);
-  const activeCount = $derived(f.sectors.length + f.routes.length + f.ratings.length + (f.hasCareers ? 1 : 0) + (f.town ? 1 : 0) + (f.q ? 1 : 0));
+  const fmt = (n: number) => n.toLocaleString('en-GB');
+  const returnTo = $derived(page.url.pathname + page.url.search);
+  const activeCount = $derived(
+    f.families.length + f.modes.length + f.employment.length + f.sponsorship.length + f.seniority.length +
+      (f.city ? 1 : 0) + (f.q ? 1 : 0) + (f.since ? 1 : 0) + (f.hasSalary ? 1 : 0) + (f.hideStale ? 1 : 0)
+  );
+
+  const WORK: Record<string, string> = { remote: 'Remote', hybrid: 'Hybrid', onsite: 'On-site', flexible: 'Remote or office' };
+  const EMP: Record<string, string> = { full_time: 'Full-time', part_time: 'Part-time', contract: 'Contract', internship: 'Internship', temporary: 'Temporary' };
+  const LEVEL: Record<string, string> = { entry: 'Entry level', mid: 'Mid level', senior: 'Senior', lead: 'Lead / head', principal: 'Staff / principal', executive: 'Executive' };
+  const SPONSOR: Record<string, string> = { offered: 'Offered', unmentioned: 'Not mentioned', right_to_work: 'Right to work needed', not_offered: 'No sponsorship', unclear: 'Unclear' };
+  const FAMILY_SHORT: Record<string, string> = { software: 'Software', product: 'Product', design: 'Design', ai_ml: 'AI & ML', data: 'Data', cloud_devops: 'Cloud & DevOps', cybersecurity: 'Security', it_support: 'IT support', adjacent: 'Adjacent' };
+  const LEVEL_SHORT: Record<string, string> = { entry: 'Entry', mid: 'Mid', senior: 'Senior', lead: 'Lead', principal: 'Staff', executive: 'Executive' };
+  const summaryLine = $derived(
+    [`${fmt(data.total)} live role${data.total === 1 ? '' : 's'}${data.summary?.orgs ? ` from ${fmt(data.summary.orgs)} employers` : ''}`, data.summary?.last ? `checked ${ago(data.summary.last)}` : '']
+      .filter(Boolean)
+      .join(' · ')
+  );
+  const loading = $derived(navigating.to?.url.pathname === '/');
+  const first = $derived((f.page - 1) * data.pageSize + 1);
+  const last = $derived(Math.min(f.page * data.pageSize, data.total));
+  const activeLabels = $derived([
+    ...f.families.map((v) => FAMILY_SHORT[v]), ...f.modes.map((v) => WORK[v]), ...f.seniority.map((v) => LEVEL_SHORT[v]),
+    ...f.sponsorship.map((v) => `Sponsorship: ${SPONSOR[v].toLowerCase()}`), ...f.employment.map((v) => EMP[v]),
+    ...(f.since ? [`Last ${f.since} days`] : []), ...(f.hasSalary ? ['Shows a salary'] : []), ...(f.hideStale ? ['Hide possibly stale'] : [])
+  ]);
 
   function pageHref(p: number) {
     const u = new URLSearchParams();
     if (f.q) u.set('q', f.q);
-    if (f.town) u.set('town', f.town);
-    f.sectors.forEach((s) => u.append('sector', s));
-    f.routes.forEach((s) => u.append('route', s));
-    f.ratings.forEach((s) => u.append('rating', s));
-    if (f.hasCareers) u.set('careers', '1');
+    if (f.city) u.set('city', f.city);
+    f.families.forEach((v) => u.append('family', v));
+    f.modes.forEach((v) => u.append('mode', v));
+    f.employment.forEach((v) => u.append('emp', v));
+    f.sponsorship.forEach((v) => u.append('sponsor', v));
+    f.seniority.forEach((v) => u.append('level', v));
+    if (f.since) u.set('since', String(f.since));
+    if (f.hasSalary) u.set('salary', '1');
+    if (f.hideStale) u.set('fresh', '1');
     if (p > 1) u.set('page', String(p));
     const qs = u.toString();
     return qs ? `/?${qs}` : '/';
   }
 
-  const sectorFacets = $derived(new Map(data.sectorFacets.map((x) => [x.value, x.count])));
-  const sectorOptions = $derived(
-    SECTOR_TAGS.filter((t) => (sectorFacets.get(t) ?? 0) > 0 || f.sectors.includes(t))
-  );
-  const fmt = (n: number) => n.toLocaleString('en-GB');
-  const following = $derived(new Set(data.following));
-  const returnTo = $derived(page.url.pathname + page.url.search);
-  const first = $derived((f.page - 1) * data.pageSize + 1);
-  const last = $derived(Math.min(f.page * data.pageSize, data.total));
+  const facetMap = (rows: { value: string; count: number }[]) => new Map(rows.map((r) => [r.value, r.count]));
+  const fam = $derived(facetMap(data.facets.family));
+  const mode = $derived(facetMap(data.facets.mode));
+  const emp = $derived(facetMap(data.facets.employment));
+  const sp = $derived(facetMap(data.facets.sponsorship));
+  const lvl = $derived(facetMap(data.facets.seniority));
+  const empOptions = $derived(['full_time', 'part_time', 'contract', 'internship', 'temporary'].filter((v) => (emp.get(v) ?? 0) > 0 || f.employment.includes(v)));
+  const familyOptions = ['software', 'product', 'design', 'ai_ml', 'data', 'cloud_devops', 'cybersecurity', 'it_support', 'adjacent'] as RoleFamily[];
 </script>
 
-{#if page.url.searchParams.get('deleted') === '1'}
-  <p class="notice" role="status"><Icon name="check-circle" />Your account and everything saved with it have been deleted.</p>
-{/if}
-
 <header class="page-head">
-  <h1 class="t-heading-1">UK organisations licensed to sponsor workers</h1>
-  <p class="t-body-lg t-secondary">{`${fmt(data.total)} match${data.total === 1 ? '' : 'es'}${data.register ? ` · register published ${data.register.published_on}` : ''}`}</p>
+  <h1 class="t-heading-1">Tech opportunities at UK visa sponsors</h1>
+  <p class="t-body-lg t-secondary">{summaryLine}</p>
 </header>
 
-<form id="org-filters" method="GET" action="/"></form>
+<form id="opp-filters" method="GET" action="/"></form>
 
-<search class="search card" aria-label="Search organisations">
+<search class="search card" aria-label="Search roles">
   <div class="field">
-    <label class="field-label" for="q">Organisation name</label>
-    <div class="control"><Icon name="search" /><input id="q" form="org-filters" type="search" name="q" value={f.q} placeholder="e.g. cyber, analytics" /></div>
+    <label class="field-label" for="q">Role or employer</label>
+    <div class="control"><Icon name="search" /><input id="q" form="opp-filters" type="search" name="q" value={f.q} placeholder="e.g. designer, Monzo" /></div>
   </div>
   <div class="field">
-    <label class="field-label" for="town">Town or city</label>
-    <div class="control"><Icon name="map-pin" /><input id="town" form="org-filters" type="text" name="town" value={f.town} list="towns" placeholder="Anywhere in the UK" autocomplete="off" /></div>
-    <datalist id="towns">{#each data.towns as t (t.value)}<option value={t.value}>{fmt(t.count)}</option>{/each}</datalist>
+    <label class="field-label" for="city">Town or city</label>
+    <div class="control"><Icon name="map-pin" /><input id="city" form="opp-filters" type="text" name="city" value={f.city} list="cities" placeholder="Anywhere in the UK" autocomplete="off" /></div>
+    <datalist id="cities">{#each data.cities as c (c.value)}<option value={c.value}>{c.count}</option>{/each}</datalist>
   </div>
-  <button type="submit" form="org-filters" class="btn btn-primary"><Icon name="search" />Search</button>
+  <button type="submit" form="opp-filters" class="btn btn-primary"><Icon name="search" />Search</button>
 </search>
 
 <div class="layout">
@@ -76,53 +102,101 @@
       </div>
 
       <fieldset>
-        <legend class="t-overline">Website <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
-        <p class="t-caption t-secondary hint">Websites are found automatically for a growing shortlist, starting with tech organisations.</p>
-        <div class="chips"><label class="chip"><input form="org-filters" type="checkbox" name="careers" value="1" checked={f.hasCareers} /><Icon name="check" size={16} />Has a careers page</label></div>
-      </fieldset>
-
-      <fieldset>
-        <legend class="t-overline">Sector <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
-        <p class="t-caption t-secondary hint">From Companies House codes, the organisation's website or its roles. Many organisations are untagged.</p>
+        <legend class="t-overline">Role type <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
+        <p class="t-caption t-secondary hint">Worked out from the job title.</p>
         <div class="chips">
-          {#each sectorOptions as t (t)}
-            <label class="chip"><input form="org-filters" type="checkbox" name="sector" value={t} checked={f.sectors.includes(t)} /><Icon name="check" size={16} />{data.sectorLabels[t]} <span class="count">· {fmt(sectorFacets.get(t) ?? 0)}</span></label>
+          {#each familyOptions as v (v)}
+            <label class="chip"><input form="opp-filters" type="checkbox" name="family" value={v} checked={f.families.includes(v)} /><Icon name="check" size={16} />{FAMILY_SHORT[v]} <span class="count">· {fmt(fam.get(v) ?? 0)}</span></label>
           {/each}
         </div>
       </fieldset>
 
       <fieldset>
-        <legend class="t-overline">Sponsorship route <span class="prov prov-verified"><Icon name="check-circle" size={14} />Verified</span></legend>
+        <legend class="t-overline">Where you work</legend>
+        <p class="t-caption t-secondary hint">Roles that don't say are hidden when you pick one.</p>
         <div class="chips">
-          {#each data.routeFacets as r (r.value)}
-            <label class="chip"><input form="org-filters" type="checkbox" name="route" value={r.value} checked={f.routes.includes(r.value)} /><Icon name="check" size={16} />{r.value} <span class="count">· {fmt(r.count)}</span></label>
+          {#each ['remote', 'hybrid', 'onsite'] as v (v)}
+            <label class="chip"><input form="opp-filters" type="checkbox" name="mode" value={v} checked={f.modes.includes(v)} /><Icon name="check" size={16} />{WORK[v]} <span class="count">· {fmt((mode.get(v) ?? 0) + (mode.get('flexible') ?? 0))}</span></label>
           {/each}
         </div>
       </fieldset>
 
       <fieldset>
-        <legend class="t-overline">Rating <span class="prov prov-verified"><Icon name="check-circle" size={14} />Verified</span></legend>
+        <legend class="t-overline">Level <span class="prov prov-inferred"><Icon name="sparkle" size={14} />Inferred</span></legend>
         <div class="chips">
-          {#each data.ratingFacets as r (r.value)}
-            <label class="chip" title={RATING_HELP[r.value] ?? ''}><input form="org-filters" type="checkbox" name="rating" value={r.value} checked={f.ratings.includes(r.value)} /><Icon name="check" size={16} />{RATING_LABELS[r.value] ?? r.value} <span class="count">· {fmt(r.count)}</span></label>
+          {#each ['entry', 'mid', 'senior', 'lead', 'principal', 'executive'] as v (v)}
+            {#if (lvl.get(v) ?? 0) > 0 || f.seniority.includes(v)}
+              <label class="chip"><input form="opp-filters" type="checkbox" name="level" value={v} checked={f.seniority.includes(v)} /><Icon name="check" size={16} />{LEVEL_SHORT[v]} <span class="count">· {fmt(lvl.get(v) ?? 0)}</span></label>
+            {/if}
           {/each}
         </div>
       </fieldset>
 
-      <button type="submit" form="org-filters" class="btn btn-primary btn-block">Apply filters</button>
+      <fieldset>
+        <legend class="t-overline">Sponsorship in the advert</legend>
+        <p class="t-caption t-secondary hint">Every employer here is on the register. This filters by the job advert's own wording.</p>
+        <div class="chips">
+          {#each ['offered', 'unmentioned', 'right_to_work', 'not_offered', 'unclear'] as v (v)}
+            <label class="chip"><input form="opp-filters" type="checkbox" name="sponsor" value={v} checked={f.sponsorship.includes(v)} /><Icon name="check" size={16} />{SPONSOR[v]} <span class="count">· {fmt(sp.get(v) ?? 0)}</span></label>
+          {/each}
+        </div>
+      </fieldset>
+
+      {#if empOptions.length}
+        <fieldset>
+          <legend class="t-overline">Employment</legend>
+          <div class="chips">
+            {#each empOptions as v (v)}
+              <label class="chip"><input form="opp-filters" type="checkbox" name="emp" value={v} checked={f.employment.includes(v)} /><Icon name="check" size={16} />{EMP[v]} <span class="count">· {fmt(emp.get(v) ?? 0)}</span></label>
+            {/each}
+          </div>
+        </fieldset>
+      {/if}
+
+      <fieldset>
+        <legend class="t-overline">Freshness and pay</legend>
+        <div class="field">
+          <label class="field-label" for="since">New or updated</label>
+          <div class="control">
+            <select id="since" form="opp-filters" name="since">
+              <option value="0" selected={!f.since}>Any time</option>
+              <option value="7" selected={f.since === 7}>Last 7 days</option>
+              <option value="14" selected={f.since === 14}>Last 14 days</option>
+              <option value="30" selected={f.since === 30}>Last 30 days</option>
+            </select>
+            <Icon name="chevron-down" class="chev" />
+          </div>
+        </div>
+        <div class="chips">
+          <label class="chip"><input form="opp-filters" type="checkbox" name="salary" value="1" checked={f.hasSalary} /><Icon name="check" size={16} />Shows a salary</label>
+          <label class="chip"><input form="opp-filters" type="checkbox" name="fresh" value="1" checked={f.hideStale} /><Icon name="check" size={16} />Hide possibly stale</label>
+        </div>
+      </fieldset>
+
+      <button type="submit" form="opp-filters" class="btn btn-primary btn-block">Apply filters</button>
     </div>
   </details>
 
-  <section class="results" aria-labelledby="org-count">
-    <p id="org-count" class="t-label" role="status">{#if data.orgs.length}Showing {fmt(first)}–{fmt(last)} of {fmt(data.total)} organisations{:else}No organisations match{/if}</p>
-    {#if data.orgs.length === 0}
-      <EmptyState icon="building" title="No organisations match these filters" body="Try removing a filter or searching a shorter name.">
-        <a class="btn btn-primary" href="/">Clear all filters</a>
+  <section class="results" aria-labelledby="results-count" aria-busy={loading}>
+    <div class="results-bar">
+      <p id="results-count" class="t-label" role="status">
+        {#if loading}Loading roles…{:else if data.rows.length === 0}No roles match{activeCount ? ` all ${activeCount} filters` : ''}{:else}Showing {fmt(first)}–{fmt(last)} of {fmt(data.total)} roles{/if}
+      </p>
+      {#if activeLabels.length}<ul class="tags active" aria-label="Active filters">{#each activeLabels as l (l)}<li class="tag tag-brand"><Icon name="check" size={14} />{l}</li>{/each}</ul>{/if}
+    </div>
+
+    {#if data.rows.length === 0}
+      <EmptyState title={data.summary?.live ? 'No roles match these filters' : 'No roles yet'} body={data.summary?.live ? "Try removing a filter, or search anywhere in the UK. Sponsorship wording changes often, so it's worth checking back." : 'Roles appear once employers with a supported job board have been scanned.'}>
+        {#if activeCount}<a class="btn btn-primary" href="/">Clear all filters</a>{/if}
+        <a class="btn btn-secondary" href="/organisations">Browse organisations</a>
       </EmptyState>
     {:else}
-      <ul class="grid">
-        {#each data.orgs as o (o.id)}<OrgCard {o} sectorLabels={data.sectorLabels} loggedIn={data.loggedIn} following={following.has(o.id)} {returnTo} />{/each}
+      <ul class="list">
+        {#each data.rows as o (o.id)}
+          <OppCard {o} loggedIn={data.loggedIn} mark={data.marks[o.id] ?? null} {returnTo} />
+        {/each}
       </ul>
+
       {#if data.pages > 1}
         <nav class="pager" aria-label="Pagination">
           {#if f.page > 1}<a class="btn btn-secondary" href={pageHref(f.page - 1)} rel="prev"><Icon name="arrow-left" size={16} />Previous</a>{:else}<span class="btn btn-secondary" aria-disabled="true">Previous</span>{/if}
@@ -140,11 +214,11 @@
 </div>
 
 <style>
-  .notice { display: flex; gap: var(--space-sm); align-items: center; margin: 0 0 var(--space-lg); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-md); background: var(--color-status-verified-bg); color: var(--color-status-verified-fg); }
   .page-head { display: grid; gap: var(--space-xs); margin-bottom: var(--space-xl); }
   .page-head p { margin: 0; }
   .search { display: grid; grid-template-columns: 1fr 1fr auto; gap: var(--space-md); align-items: end; padding: var(--space-lg); margin-bottom: var(--space-xl); }
   .layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--space-xl); align-items: start; }
+
   .filters { padding: var(--space-lg); position: sticky; top: 96px; max-height: calc(100vh - 112px); overflow: auto; }
   .filters > summary { display: none; }
   .filters-body { display: grid; gap: var(--space-lg); }
@@ -153,13 +227,17 @@
   legend { display: flex; align-items: center; gap: var(--space-xs); padding: 0; margin-bottom: var(--space-sm); color: var(--color-text-secondary); }
   legend .prov { text-transform: none; letter-spacing: 0; }
   .hint { margin: calc(-1 * var(--space-xs)) 0 0; }
+
   .results { display: grid; gap: var(--space-md); min-width: 0; }
-  .results > p { margin: 0; }
-  .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: var(--space-md); }
-  .pager { display: flex; justify-content: space-between; align-items: center; gap: var(--space-sm); }
+  .results-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); min-height: 32px; }
+  .results-bar p { margin: 0; }
+  .active { list-style: none; margin: 0; padding: 0; }
+  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-md); }
+  .pager { display: flex; justify-content: space-between; align-items: center; gap: var(--space-sm); margin-top: var(--space-xs); }
   .banners { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-lg); margin-top: var(--space-4xl); }
+
   @media (max-width: 1023px) {
-    .layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
+    .layout { grid-template-columns: 1fr; gap: var(--space-md); }
     .filters { position: static; max-height: none; overflow: visible; padding: 0; background: none; border: 0; box-shadow: none; }
     .filters > summary { display: inline-flex; list-style: none; }
     .filters > summary::-webkit-details-marker { display: none; }
@@ -169,7 +247,7 @@
   }
   @media (max-width: 640px) {
     .page-head { margin-bottom: var(--space-lg); }
-    .search { grid-template-columns: minmax(0, 1fr); padding: var(--space-md); margin-bottom: var(--space-lg); }
+    .search { grid-template-columns: 1fr; padding: var(--space-md); margin-bottom: var(--space-lg); }
     .search .btn { width: 100%; }
   }
 </style>

@@ -6,7 +6,7 @@ import { safeNext } from '$lib/server/auth';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   const f = await request.formData();
-  const back = safeNext(String(f.get('return') ?? ''), '/opportunities');
+  const back = safeNext(String(f.get('return') ?? ''), '/');
   if (!locals.user) redirect(303, `/login?next=${encodeURIComponent(back)}`);
   const mark = String(f.get('mark') ?? '');
   await setMark(sql, locals.user.userId, Number(f.get('opportunity_id')), (MARKS as string[]).includes(mark) ? (mark as Mark) : null);

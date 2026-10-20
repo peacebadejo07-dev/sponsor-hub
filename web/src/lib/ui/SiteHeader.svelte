@@ -9,8 +9,8 @@
   let { user }: { user: { email: string } | null } = $props();
   const here = $derived(page.url.pathname);
   const LINKS = [
-    { href: '/opportunities', label: 'Opportunities', on: (p: string) => p.startsWith('/opportunities') },
-    { href: '/', label: 'Organisations', on: (p: string) => p === '/' || p.startsWith('/org/') },
+    { href: '/', label: 'Opportunities', on: (p: string) => p === '/' },
+    { href: '/organisations', label: 'Organisations', on: (p: string) => p.startsWith('/organisations') || p.startsWith('/org/') },
     { href: '/for-you', label: 'For you', on: (p: string) => p.startsWith('/for-you') },
     { href: '/saved', label: 'Saved', on: (p: string) => p.startsWith('/saved') },
     { href: '/today', label: 'Today', on: (p: string) => p.startsWith('/today') }

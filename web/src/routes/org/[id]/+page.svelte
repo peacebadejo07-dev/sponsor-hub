@@ -82,7 +82,7 @@
   </section>
 {/snippet}
 
-<a class="back t-label" href="/"><Icon name="chevron-left" size={16} />All organisations</a>
+<a class="back t-label" href="/organisations"><Icon name="chevron-left" size={16} />All organisations</a>
 
 <article class="hero card">
   <div class="cover blur-bg" aria-hidden="true"></div>
@@ -139,16 +139,16 @@
         </ul>
       {:else if !researched}
         <EmptyState icon="building" title="We haven't checked this organisation's jobs yet" body="We find websites and job boards automatically, starting with tech organisations. This one is in the queue, so its roles will appear here once it's checked.">
-          <a class="btn btn-secondary" href="/opportunities">Browse roles at other sponsors</a>
+          <a class="btn btn-secondary" href="/">Browse roles at other sponsors</a>
         </EmptyState>
       {:else if !o.ats_type}
         <EmptyState icon="building" title="We can't read this organisation's job board yet" body={o.careers_url ? 'We found their careers page, but not a job board we can read automatically. Check it directly for current roles.' : "We couldn't find a careers page for this organisation."}>
           {#if o.careers_url}<a class="btn btn-primary" href={safeHref(o.careers_url)} rel="noopener nofollow" target="_blank">Open their careers page<Icon name="arrow-up-right" size={16} /></a>{/if}
-          <a class="btn btn-secondary" href="/opportunities">Browse roles at other sponsors</a>
+          <a class="btn btn-secondary" href="/">Browse roles at other sponsors</a>
         </EmptyState>
       {:else}
         <EmptyState icon="search" title="No open tech roles right now" body={`We check ${name}'s job board every day${data.lastScan ? ` (last checked ${ago(data.lastScan)})` : ''}. Follow them to see new roles on Today.`}>
-          <a class="btn btn-secondary" href="/opportunities">Browse roles at other sponsors</a>
+          <a class="btn btn-secondary" href="/">Browse roles at other sponsors</a>
         </EmptyState>
       {/if}
     {:else if data.tab === 'sponsorship'}

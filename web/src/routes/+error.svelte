@@ -19,8 +19,8 @@
       <p class="t-body t-secondary">That's on us, not you. Try again in a moment. If it keeps happening, please report it.</p>
     {/if}
     <div class="actions">
-      <a class="btn btn-primary" href="/opportunities">Browse opportunities</a>
-      <a class="btn btn-secondary" href="/">Search organisations</a>
+      <a class="btn btn-primary" href="/">Browse opportunities</a>
+      <a class="btn btn-secondary" href="/organisations">Search organisations</a>
     </div>
   </section>
 </div>

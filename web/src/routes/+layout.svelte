@@ -11,8 +11,8 @@
 </script>
 
 <svelte:head>
-  <title>Sponsor Hub: UK visa-sponsoring employers and tech roles</title>
-  <meta name="description" content="Explore UK organisations licensed to sponsor workers, filtered by sector, location, route and rating." />
+  <title>Sponsor Hub: tech jobs at UK visa sponsors</title>
+  <meta name="description" content="Tech jobs at UK employers licensed to sponsor visas, checked daily, with what each advert says about sponsorship. Plus every organisation on the Home Office sponsor register." />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 </svelte:head>
 

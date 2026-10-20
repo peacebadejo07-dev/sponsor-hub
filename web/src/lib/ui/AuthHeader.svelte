@@ -6,7 +6,7 @@
 
 <header class="auth-header">
   <a class="home" href="/" aria-label="Sponsor Hub home"><Logo height={28} /></a>
-  <a class="btn btn-secondary browse" href="/opportunities"><span class="long">Browse without signing in</span><span class="short">Browse roles</span><Icon name="arrow-right" size={16} /></a>
+  <a class="btn btn-secondary browse" href="/"><span class="long">Browse without signing in</span><span class="short">Browse roles</span><Icon name="arrow-right" size={16} /></a>
 </header>
 
 <style>
