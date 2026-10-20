@@ -50,5 +50,8 @@
   @media (max-width: 640px) {
     .site-footer { padding: var(--space-xl) 0; }
     .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-md); width: 100%; }
+    /* 44px rows for thumbs */
+    ul { gap: 0; }
+    li a { display: inline-block; padding-block: 11px; }
   }
 </style>

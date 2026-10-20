@@ -75,7 +75,8 @@
   .head { display: flex; gap: var(--space-md); align-items: center; }
   .names { display: grid; gap: 2px; flex: 1; min-width: 0; }
   .names p { margin: 0; }
-  h2 a { text-decoration: none; overflow-wrap: anywhere; }
+  /* Inline padding widens the tap area to 44px without moving anything. */
+  h2 a { text-decoration: none; overflow-wrap: anywhere; padding-block: 11px; }
   h2 a:hover { text-decoration: underline; }
   .head form { margin: 0; }
   .block { display: grid; gap: var(--space-xs); }

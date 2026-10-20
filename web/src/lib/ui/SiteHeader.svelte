@@ -72,7 +72,9 @@
     .nav { display: none; }
     .menu { display: inline-flex; }
     .bar { min-height: 64px; }
-    .signin { min-height: var(--size-control-sm); padding: 0 var(--space-md); font-size: var(--font-size-label-sm); }
+    .signin { position: relative; min-height: var(--size-control-sm); padding: 0 var(--space-md); font-size: var(--font-size-label-sm); }
+    .signin::after { content: ''; position: absolute; inset: -6px 0; }
+    .home { padding-block: 10px; margin-block: -10px; }
     .me-label { display: none; }
   }
   @media (max-width: 400px) {

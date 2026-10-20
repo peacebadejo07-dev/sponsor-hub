@@ -30,7 +30,7 @@
 {/if}
 
 <style>
-  .skip { position: absolute; left: var(--space-md); top: -100px; z-index: 100; background: var(--color-bg-surface); padding: var(--space-xs) var(--space-md); border-radius: var(--radius-md); box-shadow: var(--shadow-md); }
+  .skip { position: absolute; left: var(--space-md); top: -100px; z-index: 100; background: var(--color-bg-surface); padding: var(--space-sm) var(--space-md); min-height: var(--size-touch-target); border-radius: var(--radius-md); box-shadow: var(--shadow-md); }
   .skip:focus { top: var(--space-md); }
   .page { --page-pad-end: var(--space-4xl); max-width: var(--layout-page-max); margin: 0 auto; padding: var(--space-2xl) var(--layout-gutter) var(--page-pad-end); min-height: 70vh; }
   .auth-shell { min-height: 100vh; display: flex; flex-direction: column; }

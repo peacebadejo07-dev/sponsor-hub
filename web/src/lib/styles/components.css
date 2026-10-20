@@ -77,7 +77,7 @@ ul.tags, ol.tags { list-style: none; margin: 0; padding: 0; }
   transition: background-color var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out);
 }
 .chip:hover { background: var(--color-bg-muted); }
-.chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chip input { position: absolute; opacity: 0; inset: -4px 0; margin: 0; cursor: pointer; } /* 40px tap area; rows are 8px apart */
 .chip svg.icon { display: none; }
 .chip:has(input:checked) { background: var(--color-bg-brand-subtle); border: var(--border-width-strong) solid var(--color-icon-brand); color: var(--color-text-link); padding: 0 calc(var(--space-sm) - 0.5px); }
 .chip:has(input:checked) svg.icon { display: inline-block; }
@@ -94,6 +94,7 @@ ul.tags, ol.tags { list-style: none; margin: 0; padding: 0; }
   font-size: var(--font-size-body-sm); line-height: var(--line-height-body-sm); color: var(--color-text-primary);
 }
 .opt-nested { padding-left: 30px; }
+@media (max-width: 1023px) { .opt { padding-block: 11px; } } /* 44px rows for thumbs */
 .opt[hidden] { display: none; }
 .opt input {
   appearance: none; flex: none; width: 18px; height: 18px; margin: 2px 0 0; display: grid; place-content: center;
